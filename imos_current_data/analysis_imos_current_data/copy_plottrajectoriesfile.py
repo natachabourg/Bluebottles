@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import xarray as xr
+from datetime import timedelta, datetime
 import numpy as np
 from argparse import ArgumentParser
 from parcels import Field
@@ -16,8 +17,8 @@ except:
     anim = None
 
 
-def plotTrajectoriesFileModified(filename, mode='2d', tracerfile=None, tracerfield='P',
-                         tracerlon='x', tracerlat='y', recordedvar=None, movie_forward=True,
+def plotTrajectoriesFileModified(filename,mode='2d', tracerfile=None, tracerfield='P',
+                         tracerlon='x', tracerlat='y',recordedvar=None, movie_forward=True,
                          bins=20, show_plt=True):
     """Quick and simple plotting of Parcels trajectories
 
@@ -53,7 +54,7 @@ def plotTrajectoriesFileModified(filename, mode='2d', tracerfile=None, tracerfie
 
     if tracerfile is not None and mode is not 'hist2d':
         tracerfld = Field.from_netcdf(tracerfile, tracerfield, {'lon': tracerlon, 'lat': tracerlat}, grid=None) #time
-        plt, fig, ax, cartopy = plotfield(tracerfld)
+        plt, fig, ax, cartopy = plotfield(tracerfld, show_time=datetime(2019, 3, 10, 2))  # plt, fig, ax, cartopy = plotfield(tracerfld)
         if plt is None:
             return  # creating axes was not possible
         titlestr = ' and ' + tracerfield
@@ -91,7 +92,7 @@ def plotTrajectoriesFileModified(filename, mode='2d', tracerfile=None, tracerfie
     elif mode in ('movie2d', 'movie2d_notebook'):
         ax.set_xlim(np.nanmin(lon), np.nanmax(lon))
         ax.set_ylim(np.nanmin(lat), np.nanmax(lat))
-        plottimes = np.unique(time) #nb : plottimes = len(time)  
+        plottimes = np.unique(time)
         if not movie_forward:
             plottimes = np.flip(plottimes, 0)
         if isinstance(plottimes[0], (np.datetime64, np.timedelta64)):
