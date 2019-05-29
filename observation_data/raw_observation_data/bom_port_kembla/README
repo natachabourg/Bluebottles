@@ -1,0 +1,17 @@
+http://www.bom.gov.au/oceanography/projects/abslmp/data/index.shtml
+
+
+python...
+
+    import pandas as pd
+
+    from matplotlib import pyplot as plt
+
+    FILE = '.....................csv'
+    print(FILE)
+
+    df = pd.read_csv(FILE)   
+    print(df.head())
+
+
+    y = df['TEMP'][:].values.astype('float64') 
