@@ -170,7 +170,7 @@ def TableMonthBeach():
                             elif bluebottles[i][j]==0.: 
                                 none_month[i][m]+=1
                             percentage_none_month[i][m]=np.divide(100.*none_month[i][m],observed_month[i][m]+likely_month[i][m]+none_month[i][m])
-            month_beach=Table([month,observed_month[i][:12],likely_month[i][:12],none_month[i][:12], percentage_none_month[i][:12]],names=('Month','Observed','Likely','None','% of None'))
+            month_beach=Table([month,observed_month[i][:12],likely_month[i][:12],none_month[i][:12], percentage_none_month[i][:12]],names=('Month','Observed','Likely','Noone','% of None'))
             ascii.write(month_beach, '../outputs_observation_data/monthly_bluebottles_'+yearr[y]+'_'+location[i]+'.csv', format='csv', fast_writer=False, overwrite=True)  
 
     """
@@ -200,6 +200,39 @@ def GetDateSomeLikelyNone(number):
     return date_number
 
 
+def CalcHist(file):
+    observedd=[]
+    likelyy=[]
+    nonee=[]
+    for i in range(len(file)):
+        nonee.append(file.Noone[i])
+        observedd.append(file.Observed[i])
+        likelyy.append(file.Likely[i])
+    return observedd,likelyy, nonee
+
+def PlotHist():
+    f_monthly=[]
+    filesmonthly = glob.glob('../outputs_observation_data/monthly*.csv')
+    obs=[0 for i in range(12)]
+    lik=[0 for i in range(12)]
+    non=[0 for i in range(12)]
+    month=np.arange(12)
+    for i in range(len(filesmonthly)):
+        f_monthly.append(pd.read_csv(filesmonthly[i]))
+        obs[i], lik[i], non[i]=CalcHist(f_monthly[i])
+    for i in range(12):
+        obbs[i]=np.mean(obs[:])
+        liik=np.mean(lik[:])
+        noon=np.mean(non[:])
+    ax = plt.subplot(111)
+    bins=np.arange(1,14)
+    ax.set_xticks(bins[:-1])
+    ax.set_xticklabels(['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'])
+    ax.bar(month-0.2,obbs,width=0.2,color='lightskyblue',align='center',label='observed')
+    ax.bar(month,liik,width=0.2,color='lightpink',align='center',label='likely')
+    ax.bar(month+0.2,noon,width=0.2,color='grey',align='center',label='none')
+    plt.legend()
+
 files_name = glob.glob('../raw_observation_data/bluebottle_lifeguard_reports/*2.xlsx') #0Clovelly 1Coogee 2Maroubra
 
 beach=[]
@@ -216,26 +249,14 @@ for i in range(0,len(water_temp)):
     bitchdate[i], date[i], water_temp[i], bluebottles[i], description[i] = GetVariables(beach[i])
 
 date_box=[GetDateSomeLikelyNone(0.),GetDateSomeLikelyNone(0.5),GetDateSomeLikelyNone(1.)]
+PlotHist()
 #TableDiff(date[0],date[1],bluebottles[0],bluebottles[1])
 #TableDiff(date[0],date[2],bluebottles[0],bluebottles[2])
 #TableDiff(date[1],date[2],bluebottles[1],bluebottles[2])
 
 #PlotTemp()
 #TableMonthBeach()
-f_monthly=[]
-filesmonthly = pd.read_csv('../outputs_observation_data/monthly*.csv')
-for i in range(len(filesmonthly)):
-    f_monthly.append(filesmonthly[i])
 
-def PlotHist(file):
-    observedd=[]
-    likelyy=[]
-    nonee=[]
-    monthh=[]
-    for i in range(len(file)):
-        observedd.append(file.Observed[i])
-        likelyy.append(file.Likely[i])
-        monthh.append(i+1)
 
 
 """
