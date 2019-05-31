@@ -171,7 +171,8 @@ def TableMonthBeach():
                                 none_month[i][m]+=1
                             percentage_none_month[i][m]=np.divide(100.*none_month[i][m],observed_month[i][m]+likely_month[i][m]+none_month[i][m])
             month_beach=Table([month,observed_month[i][:12],likely_month[i][:12],none_month[i][:12], percentage_none_month[i][:12]],names=('Month','Observed','Likely','None','% of None'))
-            ascii.write(month_beach, '../outputs_observation_data/Bluebottles per month for'+yearr[y]+' at'+location[i]+'.csv', format='csv', fast_writer=False, overwrite=True)  
+            ascii.write(month_beach, '../outputs_observation_data/monthly_bluebottles_'+yearr[y]+'_'+location[i]+'.csv', format='csv', fast_writer=False, overwrite=True)  
+
     """
     ax=plt.axes()
     x=[1,2,3,4,5,6,7,8,9,10,11,12]
@@ -188,7 +189,7 @@ def TableMonthBeach():
     ax.hist()
     plt.show()"""
 
-            
+    
 
 def GetDateSomeLikelyNone(number):
     date_number = [] #for coogee
@@ -219,8 +220,23 @@ date_box=[GetDateSomeLikelyNone(0.),GetDateSomeLikelyNone(0.5),GetDateSomeLikely
 #TableDiff(date[0],date[2],bluebottles[0],bluebottles[2])
 #TableDiff(date[1],date[2],bluebottles[1],bluebottles[2])
 
-PlotTemp()
+#PlotTemp()
 #TableMonthBeach()
+f_monthly=[]
+filesmonthly = pd.read_csv('../outputs_observation_data/monthly*.csv')
+for i in range(len(filesmonthly)):
+    f_monthly.append(filesmonthly[i])
+
+def PlotHist(file):
+    observedd=[]
+    likelyy=[]
+    nonee=[]
+    monthh=[]
+    for i in range(len(file)):
+        observedd.append(file.Observed[i])
+        likelyy.append(file.Likely[i])
+        monthh.append(i+1)
+
 
 """
 BOM data
@@ -340,17 +356,25 @@ BOMwater_tempNew=[]
 BOMwind_directionNew=[]
 BOMwind_speedNew=[]
 JoinBomData()
-x=[]
+"""x_none=[]
+x_likely=[]
+x_observed=[]
 for i in range(len(BOMwind_directionNew)):
     for j in range(len(date[1])): #coogee
         if DayEqual(BOMtimeNew[i],date[1][j]):
-   #         if bluebottles[1][j]==0:
-            x.append(BOMwind_directionNew[i])
-
+            if bluebottles[1][j]==0:
+                x_none.append(BOMwind_directionNew[i])
+            elif bluebottles[1][j]==0.5:
+                x_likely.append(BOMwind_directionNew[i])
+            elif bluebottles[1][j]==1.:
+                x_observed.append(BOMwind_directionNew[i])
+            
+fig = plt.figure()
+n, bins, patches=plt.hist([x_none,x_likely,x_observed])
+plotly_fig=plt.tools.mpl_to_plotly(fig)
+plt.iplot(plotly_fig,filename='ehehe-histogram')"""
 #plt.hist(x,bins=30)
 #plt.ylabel('proba')
-
-
 
 #for i in range(3):
  #   BoxPlot(i)
