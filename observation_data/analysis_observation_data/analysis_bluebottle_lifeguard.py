@@ -103,38 +103,39 @@ def TableDiff(date1,date2,file1,file2):
     t.add_row((0, equal, total))
     ascii.write(t, '../outputs_observation_data/diff'+first+second+'.csv', format='csv', fast_writer=False, overwrite=True)  
 
-def PlotFirstTry():
+def PlotTemp():
     """
     Save fig of number of bluebottles depending on time and water temperature
     """
-    
+    location=['Clovelly','Coogee','Maroubra']
     for i in range(len(bluebottles)):
-        for j in range(400,700):
+        fig=plt.figure()
+        for j in range(len(bluebottles[i])):
             if bluebottles[i][j]==1:
                 somemany=plt.scatter(bitchdate[i][j], water_temp[i][j], color='dodgerblue')
             elif bluebottles[i][j]==0.5:
                 likely=plt.scatter(bitchdate[i][j], water_temp[i][j], color='lightskyblue')
             else:
                 none=plt.scatter(bitchdate[i][j], water_temp[i][j], color='hotpink',alpha=0.8)
-    ax=plt.axes()
-    ax.xaxis.set_major_locator(plt.MaxNLocator(nbins=6))
-
+        ax=plt.axes()
+        ax.xaxis.set_major_locator(ticker.MaxNLocator(5))
+#        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
 #    ax.xaxis.set_major_locator(plt.MaxNLocator(12))
   #  years=date[0][:300].year
     # format the coords message box
   #  ax.xaxis.set_major_locator(years)
 
-    plt.ylabel('Water temperature (celsius)')
-    plt.title('Bluebottles at Coogee Beach')
-    plt.legend((somemany, likely, none),
-                ('many some','likely','none'),
-                scatterpoints=1,
-                loc='upper left',
-                ncol=3,
-                fontsize=8)
-
-    plt.show()
-   # plt.savefig('new_coogee_first')
+        plt.ylabel('Water temperature (celsius)')
+        plt.title('Bluebottles at '+str(location[i])+' beach')
+        plt.legend((somemany, likely, none),
+                    ('observed','likely','none'),
+                    scatterpoints=1,
+                    loc='upper left',
+                    ncol=3,
+                    fontsize=8)
+    
+        plt.show()
+        fig.savefig("../outputs_observation_data/plot_temp"+str(location[i])+".png")
 
 
 def TableMonthBeach():
@@ -218,7 +219,7 @@ date_box=[GetDateSomeLikelyNone(0.),GetDateSomeLikelyNone(0.5),GetDateSomeLikely
 #TableDiff(date[0],date[2],bluebottles[0],bluebottles[2])
 #TableDiff(date[1],date[2],bluebottles[1],bluebottles[2])
 
-#PlotFirstTry()
+PlotTemp()
 #TableMonthBeach()
 
 """
@@ -320,7 +321,7 @@ def WindDirectionTime(nb):
     plt.show()
 
 
-#files_name = glob.glob('../raw_observation_data/bom_port_kembla/IDO*.csv')
+files_name = glob.glob('../raw_observation_data/bom_port_kembla/IDO*.csv')
 f=[]
 BOMdate=[0,1,2]
 BOMtime=[0,1,2]
@@ -346,25 +347,14 @@ for i in range(len(BOMwind_directionNew)):
    #         if bluebottles[1][j]==0:
             x.append(BOMwind_directionNew[i])
 
-plt.hist(x,bins=30)
-plt.ylabel('proba')
+#plt.hist(x,bins=30)
+#plt.ylabel('proba')
 
-files_name_sydney='../raw_observation_data/wind_kurnell_sydney_observatory/wind_sydney_jan_19.csv'
-f_sydney=pd.read_csv(files_name_sydney)
 
-def GetSydneyVariables(filename):
-    """
-    Return date, water temp, #of bluebottles of a file
-    """
-    wind_direction = []
-    for i in range(len(filename)):
-        wind_direction.append(filename.am_wind_direction[i])
 
-    return wind_direction
 #for i in range(3):
  #   BoxPlot(i)
-wind_direction_sydney=GetSydneyVariables(f_sydney)
 
 #for i in range(len(beach)):
- #   WindDirectionTime(i)
+#    WindDirectionTime(i)
 
