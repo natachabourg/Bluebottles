@@ -187,7 +187,6 @@ def TableMonthBeach():
     ax.hist()
     plt.show()"""
 
-TableMonthBeach()
             
 
 def GetDateSomeLikelyNone(number):
@@ -220,6 +219,7 @@ date_box=[GetDateSomeLikelyNone(0.),GetDateSomeLikelyNone(0.5),GetDateSomeLikely
 #TableDiff(date[1],date[2],bluebottles[1],bluebottles[2])
 
 #PlotFirstTry()
+#TableMonthBeach()
 
 """
 BOM data
@@ -320,7 +320,7 @@ def WindDirectionTime(nb):
     plt.show()
 
 
-files_name = glob.glob('../raw_observation_data/bom_port_kembla/IDO*.csv')
+#files_name = glob.glob('../raw_observation_data/bom_port_kembla/IDO*.csv')
 f=[]
 BOMdate=[0,1,2]
 BOMtime=[0,1,2]
@@ -339,10 +339,31 @@ BOMwater_tempNew=[]
 BOMwind_directionNew=[]
 BOMwind_speedNew=[]
 JoinBomData()
+x=[]
+for i in range(len(BOMwind_directionNew)):
+    for j in range(len(date[1])): #coogee
+        if DayEqual(BOMtimeNew[i],date[1][j]):
+   #         if bluebottles[1][j]==0:
+            x.append(BOMwind_directionNew[i])
 
-for i in range(3):
-    BoxPlot(i)
+plt.hist(x,bins=30)
+plt.ylabel('proba')
 
+files_name_sydney='../raw_observation_data/wind_kurnell_sydney_observatory/wind_sydney_jan_19.csv'
+f_sydney=pd.read_csv(files_name_sydney)
+
+def GetSydneyVariables(filename):
+    """
+    Return date, water temp, #of bluebottles of a file
+    """
+    wind_direction = []
+    for i in range(len(filename)):
+        wind_direction.append(filename.am_wind_direction[i])
+
+    return wind_direction
+#for i in range(3):
+ #   BoxPlot(i)
+wind_direction_sydney=GetSydneyVariables(f_sydney)
 
 #for i in range(len(beach)):
  #   WindDirectionTime(i)

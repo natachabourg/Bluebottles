@@ -33,24 +33,27 @@ def PlotImosFile(filenames):
     def DeleteParticle(particle, fieldset, time):
         particle.delete()
     images = []
-
     fieldset = FieldSet.from_netcdf(filenames, variables, dimensions)
-    pset = ParticleSet.from_line(fieldset=fieldset,   # the fields on which the particles are advected
-                                pclass=JITParticle,# the type of particles (JITParticle or ScipyParticle)
+    """pset = ParticleSet.from_line(fieldset=fieldset,   # the fields on which the particles are advected
+                                pclass=JITParticle,
                                 size=10,
-                                start=(152., -30),
-                                finish=(159.,-34))# a vector of release latitudes
+                                start=(151.259, -33.919),
+                                finish=(151.257,-33.923))
+                              #  start=(152., -30),
+                               # finish=(159.,-34))
+    """
+    pset=ParticleSet(fieldset=fieldset, pclass=JITParticle, lon=151.259, lat=-33.92, time=datetime(2019, 3, 9, 2))
 
     k_WestVel = pset.Kernel(WestVel)
-    for i in range(70):
+    for i in range(55):
         pset.execute(AdvectionRK4,                 #
                     runtime=timedelta(hours=i),    # the total length of the run
-                    dt=timedelta(minutes=5),      # the timestep of the kernel
+                    dt=-timedelta(minutes=5),      # the timestep of the kernel
                     recovery={ErrorCode.ErrorOutOfBounds: DeleteParticle},
                     output_file=pset.ParticleFile(name="IMOSTRY.nc", outputdt=timedelta(hours=1)))
-        pset.show(domain={'N':-15, 'S':-42, 'E':170, 'W':140}, field='vector',vmin=0.,vmax=1.3, savefile='../outputs_imos_current_data/make_gif/particl'+str(i)+'.png')
-        images.append(imageio.imread('../outputs_imos_current_data/make_gif/particl'+str(i)+'.png'))
-    imageio.mimsave('../outputs_imos_current_data/particle_advection.gif', images)
+        pset.show(domain={'N':-15, 'S':-42, 'E':170, 'W':140}, field='vector',vmin=0.,vmax=1.3, savefile='../outputs_imos_current_data/make_gif/particl_revers'+str(i)+'.png')
+        images.append(imageio.imread('../outputs_imos_current_data/make_gif/particl_revers'+str(i)+'.png'))
+    imageio.mimsave('../outputs_imos_current_data/particle_advection_reverse.gif', images)
     
    #cpt.plotTrajectoriesFileModified('IMOSTRY.nc',mode='movie2d', tracerlon='LONGITUDE',tracerlat='LATITUDE',tracerfield='UCUR');
     """tracerfile=filenames,
