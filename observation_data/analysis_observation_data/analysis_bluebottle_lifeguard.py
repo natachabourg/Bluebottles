@@ -312,30 +312,35 @@ def GetBOMVariables(filename):
     return BOMtime, BOMdate, water_temp, wind_direction, wind_speed
     
 
-def BoxPlot(nb):   
+def BoxPlot(nb,date_plot,BOMdaily):   
     """
-    Box plot pour 0Clovelly ici de wind direction pour les 3 cas : none likely observed
+    Box plot pour la plage numero nb de wind direction pour les 3 cas : none likely observed
     """
     location=['Clovelly','Coogee','Maroubra']
     wind_direction_box0=[]
     wind_direction_box1=[]
     wind_direction_box2=[]
+    
     for i in range(len(date_box[nb][0])):
         for j in range(len(date_plot)):
             if date_box[nb][0][i]==date_plot[j]:
-                wind_direction_box0.append(BOMdaily[j])
+                if np.isnan(BOMdaily[j])==False:
+                    wind_direction_box0.append(BOMdaily[j])
     
     for i in range(len(date_box[nb][1])):
         for j in range(len(date_plot)):
             if date_box[nb][1][i]==date_plot[j]:
-                wind_direction_box1.append(BOMdaily[j])
-    
+                if np.isnan(BOMdaily[j])==False:
+                    wind_direction_box1.append(BOMdaily[j])
+                
     for i in range(len(date_box[nb][2])):
         for j in range(len(date_plot)):
             if date_box[nb][2][i]==date_plot[j]:
-                wind_direction_box2.append(BOMdaily[j])
-    
-    x=[wind_direction_box0,wind_direction_box1,wind_direction_box2]
+                if np.isnan(BOMdaily[j])==False:
+                    wind_direction_box2.append(BOMdaily[j])
+                    
+   
+    x=[wind_direction_box0, wind_direction_box1, wind_direction_box2]
     fig = plt.figure(figsize=(12,9))
     plt.title(location[nb])
     plt.ylabel('Wind direction (degrees)')
@@ -359,7 +364,7 @@ def DailyAverage():
 
     return BOMwind_direction_daily, t
 
-def WindDirectionTime(nb):
+def WindDirectionTime(nb, date_plot, BOMdaily):
     
     fig=plt.figure(figsize=(12,9))
     bluebottlesoupas=[]
@@ -405,13 +410,41 @@ f=pd.read_csv(file_name)
 BOMtime, BOMdate, BOMwater_temp, BOMwind_direction, BOMwind_speed = GetBOMVariables(f)
 BOMdaily,date_plot=DailyAverage()
 
-for i in range(3):
-    BoxPlot(i)
-
-#for i in range(len(beach)):
-#    WindDirectionTime(i)
-
 #plt.hist(x,bins=30)
 #plt.ylabel('proba')
 
+"""
+Kurnell data 
+"""
 
+def GetKurnellData(file):
+    day=np.zeros(len(file))
+    month=np.zeros(len(file))
+    year=np.zeros(len(file))
+    date=[]
+    wind_direction=np.zeros(len(file))
+    daily=np.zeros(len(file))
+    for i in range(len(file)):
+        day[i]=file.Day[i]
+        month[i]=file.Month[i]
+        year[i]=file.Year[i]
+        wind_direction[i]=file.Wind_direction_00[i]+file.Wind_direction_03[i]+file.Wind_direction_06[i]+file.Wind_direction_09[i]+float(file.Wind_direction_12[i])+float(file.Wind_direction_15[i])+float(file.Wind_direction_18[i])+float(file.Wind_direction_21[i])
+        daily[i]=(wind_direction[i])/8
+
+    for i in range(len(file)):
+        date.append(datetime.date(int(year[i]),int(month[i]),int(day[i])))
+
+    return date, daily
+    
+
+file_name_kurnell = '../raw_observation_data/wind_kurnell_sydney_observatory/Kurnell_Data.csv'
+file=pd.read_csv(file_name_kurnell)
+df = file.apply(pd.to_numeric, args=('coerce',)) # inserts NaNs where empty cell!!! grrrr
+
+date_kurnell, daily_kurnell=GetKurnellData(df)
+
+#for i in range(len(beach)):
+#    WindDirectionTime(i,date_kurnell,daily_kurnell)
+    
+for i in range(3):
+    BoxPlot(i, date_kurnell, daily_kurnell)
