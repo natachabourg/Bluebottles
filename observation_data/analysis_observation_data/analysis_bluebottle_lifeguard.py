@@ -4,7 +4,7 @@ Created on Thu May 22 10:14:40 2019
 
 @author : Natacha 
 """
-
+import datetime
 import pandas as pd
 import datetime
 import numpy as np
@@ -38,8 +38,8 @@ def DayEqual(object1, object2):
         return True
     else:
         return False
-                     
-                
+
+
 def GetVariables(filename):
     """
     Return date, water temp, #of bluebottles of a file
@@ -70,8 +70,9 @@ def GetVariables(filename):
                 bluebottles.append(1.)
             elif filename.Bluebottles[i]=='likely':
                 bluebottles.append(0.5)
-        
+
     return date, datee, water_temp, bluebottles, description
+#    return date, datee, water_temp, bluebottles, description
 
 
 def TableDiff(date1,date2,file1,file2):
@@ -241,6 +242,7 @@ date=[0,1,2]
 water_temp=[0,1,2]
 bluebottles=[0,1,2]
 description=[0,1,2]
+aa=[0,1,2]
 
 for i in range(0,len(files_name)):
     beach.append(pd.read_excel(files_name[i]))
@@ -249,7 +251,7 @@ for i in range(0,len(water_temp)):
     bitchdate[i], date[i], water_temp[i], bluebottles[i], description[i] = GetVariables(beach[i])
 
 date_box=[GetDateSomeLikelyNone(0.),GetDateSomeLikelyNone(0.5),GetDateSomeLikelyNone(1.)]
-PlotHist()
+#PlotHist()
 #TableDiff(date[0],date[1],bluebottles[0],bluebottles[1])
 #TableDiff(date[0],date[2],bluebottles[0],bluebottles[2])
 #TableDiff(date[1],date[2],bluebottles[1],bluebottles[2])
@@ -267,28 +269,28 @@ def GetBOMVariables(filename):
     """
     Return date, water temp, #of bluebottles of a file
     """
-    datee, date, water_temp, wind_direction, wind_speed = [], [], [], [], []
+    hour, datee, date, water_temp, wind_direction, wind_speed= [], [], [], [], [], []
     for i in range(len(filename)):
         if filename.Water_Temperature[i]>0:
             water_temp.append(filename.Water_Temperature[i])
             datee.append(filename.Date_UTC_Time[i][:11])
             date.append(time(str(filename.Date_UTC_Time[i][:2]),str(filename.Date_UTC_Time[i][3:6]),str(filename.Date_UTC_Time[i][7:11])))
+            hour.append(int(filename.Date_UTC_Time[i][12:14]))
             wind_direction.append(filename.Wind_Direction[i])
             wind_speed.append(filename.Wind_Speed[i])
     for i in range(len(date)):   
-        date[i].jan_to_01()
+        date[i].jan_to_01()        
+    
+    BOMdate = []
+    BOMtime_UTC = np.zeros(len(date))
+    BOMtime = np.zeros(len(date))
 
-    return datee, date, water_temp, wind_direction, wind_speed
+    for l in range(len(date)):
+        BOMdate.append(datetime.date(int(date[l].year), int(date[l].month), int(date[l].day)))
+        BOMtime_UTC[l] = BOMdate[l].toordinal() + hour[l]/24     #UTC
+    BOMtime = BOMtime_UTC + 10/24
 
-
-def JoinBomData():
-    for i in range(len(BOMdate)):
-        for j in range(len(BOMdate[i])):
-            BOMtimeNew.append(BOMtime[i][j])
-            BOMdateNew.append(BOMdate[i][j])
-            BOMwater_tempNew.append(BOMwater_temp[i][j])
-            BOMwind_directionNew.append(BOMwind_direction[i][j])
-            BOMwind_speedNew.append(BOMwind_speed[i][j])
+    return BOMtime, BOMdate, water_temp, wind_direction, wind_speed
     
 
 def BoxPlot(nb):   
@@ -358,25 +360,11 @@ def WindDirectionTime(nb):
     plt.show()
 
 
-files_name = glob.glob('../raw_observation_data/bom_port_kembla/IDO*.csv')
-f=[]
-BOMdate=[0,1,2]
-BOMtime=[0,1,2]
-BOMwater_temp=[0,1,2]
-BOMwind_direction=[0,1,2]
-BOMwind_speed=[0,1,2]
-daily_wind_direction=[0,1,2]
-for i in range(len(files_name)):
-    f.append(pd.read_csv(files_name[i]))
-for i in range(len(BOMdate)):
-    BOMdate[i], BOMtime[i], BOMwater_temp[i], BOMwind_direction[i], BOMwind_speed[i] = GetBOMVariables(f[i])
-    
-BOMtimeNew=[]
-BOMdateNew=[]
-BOMwater_tempNew=[]
-BOMwind_directionNew=[]
-BOMwind_speedNew=[]
-JoinBomData()
+file_name = '../raw_observation_data/bom_port_kembla/all_IDO.csv'
+f=pd.read_csv(file_name)
+
+BOMtime, BOMdate, BOMwater_temp, BOMwind_direction, BOMwind_speed = GetBOMVariables(f)
+
 """x_none=[]
 x_likely=[]
 x_observed=[]
