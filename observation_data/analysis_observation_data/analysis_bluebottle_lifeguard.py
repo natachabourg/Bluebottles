@@ -4,6 +4,7 @@ Created on Thu May 22 10:14:40 2019
 
 @author : Natacha 
 """
+import scipy.stats as stats
 import datetime
 import pandas as pd
 import datetime
@@ -71,12 +72,25 @@ def GetVariables(filename):
             elif filename.Bluebottles[i]=='likely':
                 bluebottles.append(0.5)
 
-    final_date = []
+    middle_date = []
+    final_date, final_water_temp, final_bluebottles, final_description = [], [], [], []
     for l in range(len(datee)):
-        final_date.append(datetime.date(int(datee[l].year), int(datee[l].month), int(datee[l].day)))
-
+        middle_date.append(datetime.date(int(datee[l].year), int(datee[l].month), int(datee[l].day)))
     
-    return final_date, water_temp, bluebottles, description
+    final_date.append(middle_date[0])
+    final_water_temp.append(water_temp[0])
+    final_bluebottles.append(bluebottles[0])
+    final_description.append(description[0])
+    
+    for l in range(1,len(middle_date)):  
+        if middle_date[l]!=middle_date[l-1]: #to only have one value per day
+            final_date.append(middle_date[l])
+            final_water_temp.append(water_temp[l])
+            final_bluebottles.append(bluebottles[l])
+            final_description.append(description[l])
+            
+    
+    return final_date, final_water_temp, final_bluebottles, final_description
 
 
 def TableDiff(date1,date2,file1,file2):
@@ -95,12 +109,12 @@ def TableDiff(date1,date2,file1,file2):
     second = input()
     for i in range(len(date1)):
         for j in range(len(date2)):
-            if (DayEqual(date1[i],date2[j])):
+            if (date1[i]==date2[j]):
                 if int(file1[i])==int(file2[j]):
                     equal+=1
                 else:
                     diff+=1
-                    date.append(date1[i].day+"/"+date1[i].month+"/"+date1[i].year)
+                    date.append(date1[i])
                     first_beach.append(file1[i])
                     second_beach.append(file2[j])
     t=Table([date,first_beach,second_beach], names=('date',first,second))
@@ -113,23 +127,27 @@ def PlotTemp():
     Save fig of number of bluebottles depending on time and water temperature
     """
     location=['Clovelly','Coogee','Maroubra']
+    years = mdates.YearLocator()   # every year
+    months = mdates.MonthLocator(range(0, 12), interval=2) # every 2month
+    years_fmt = mdates.DateFormatter('%Y')
+    month_fmt = mdates.DateFormatter('%m')
+
     for i in range(len(bluebottles)):
-        fig=plt.figure()
+        fig=plt.figure(figsize=(12,9))
         for j in range(len(bluebottles[i])):
             if bluebottles[i][j]==1:
-                somemany=plt.scatter(bitchdate[i][j], water_temp[i][j], color='dodgerblue')
+                somemany=plt.scatter(date[i][j], water_temp[i][j], color='dodgerblue',s=12)
             elif bluebottles[i][j]==0.5:
-                likely=plt.scatter(bitchdate[i][j], water_temp[i][j], color='lightskyblue')
+                likely=plt.scatter(date[i][j], water_temp[i][j], color='lightskyblue',s=12)
             else:
-                none=plt.scatter(bitchdate[i][j], water_temp[i][j], color='hotpink',alpha=0.8)
+                none=plt.scatter(date[i][j], water_temp[i][j], color='hotpink',alpha=0.2, marker='+',s=10)
         ax=plt.axes()
-        ax.xaxis.set_major_locator(ticker.MaxNLocator(5))
-#        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
-#    ax.xaxis.set_major_locator(plt.MaxNLocator(12))
-  #  years=date[0][:300].year
-    # format the coords message box
-  #  ax.xaxis.set_major_locator(years)
+        ax.xaxis.set_major_locator(years)
+        ax.xaxis.set_major_formatter(years_fmt)
+        ax.xaxis.set_minor_locator(months)
+        ax.xaxis.set_minor_formatter(month_fmt)
 
+        fig.autofmt_xdate()
         plt.ylabel('Water temperature (celsius)')
         plt.title('Bluebottles at '+str(location[i])+' beach')
         plt.legend((somemany, likely, none),
@@ -140,7 +158,7 @@ def PlotTemp():
                     fontsize=8)
     
         plt.show()
-        fig.savefig("../outputs_observation_data/plot_temp"+str(location[i])+".png")
+        fig.savefig("../outputs_observation_data/plot_temp"+str(location[i])+".png",dpi=300)
 
 
 def TableMonthBeach():
@@ -154,9 +172,9 @@ def TableMonthBeach():
     percentage_none_month=[0,0,0] 
     
     location=['Clovelly','Coogee','Maroubra']
-    yearr=['2016','2017','2018','2019']
+    yearr=[2016,2017,2018,2019]
     month=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-    monthh=['1','2','3','4','5','6','7','8','9','10','11','12']
+    monthh=[1,2,3,4,5,6,7,8,9,10,11,12]
     for y in range(len(yearr)):
         for i in range(len(date)):
             observed_month[i]=[0 for i in range(0,12)]
@@ -176,7 +194,7 @@ def TableMonthBeach():
                                 none_month[i][m]+=1
                             percentage_none_month[i][m]=np.divide(100.*none_month[i][m],observed_month[i][m]+likely_month[i][m]+none_month[i][m])
             month_beach=Table([month,observed_month[i][:12],likely_month[i][:12],none_month[i][:12], percentage_none_month[i][:12]],names=('Month','Observed','Likely','Noone','% of None'))
-            ascii.write(month_beach, '../outputs_observation_data/monthly_bluebottles_'+yearr[y]+'_'+location[i]+'.csv', format='csv', fast_writer=False, overwrite=True)  
+            ascii.write(month_beach, '../outputs_observation_data/monthly_bluebottles_'+str(yearr[y])+'_'+location[i]+'.csv', format='csv', fast_writer=False, overwrite=True)  
 
     """
     ax=plt.axes()
@@ -196,12 +214,11 @@ def TableMonthBeach():
 
     
 
-def GetDateSomeLikelyNone(number):
-    date_number = [] #for coogee
-  #  for i in range(len(date)):
-    for j in range(len(date[1])):
-        if bluebottles[1][j]==number:
-            date_number.append(date[1][j])
+def GetDateSomeLikelyNone(beach_nb,bluebottle_nb):
+    date_number = []
+    for j in range(len(date[beach_nb])):
+        if bluebottles[beach_nb][j]==bluebottle_nb:
+            date_number.append(date[beach_nb][j])
     return date_number
 
 
@@ -245,14 +262,14 @@ date=[0,1,2]
 water_temp=[0,1,2]
 bluebottles=[0,1,2]
 description=[0,1,2]
+date_box=[0,1,2]
 
 for i in range(0,len(files_name)):
     beach.append(pd.read_excel(files_name[i]))
 
 for i in range(0,len(water_temp)):
     date[i], water_temp[i], bluebottles[i], description[i] = GetVariables(beach[i])
-
-date_box=[GetDateSomeLikelyNone(0.),GetDateSomeLikelyNone(0.5),GetDateSomeLikelyNone(1.)]
+    date_box[i]=[GetDateSomeLikelyNone(i,0.),GetDateSomeLikelyNone(i,0.5),GetDateSomeLikelyNone(i,1.)]
 #PlotHist()
 #TableDiff(date[0],date[1],bluebottles[0],bluebottles[1])
 #TableDiff(date[0],date[2],bluebottles[0],bluebottles[2])
@@ -303,54 +320,73 @@ def BoxPlot(nb):
     wind_direction_box0=[]
     wind_direction_box1=[]
     wind_direction_box2=[]
-    for i in range(len(date_box[0])):
-        for j in range(len(BOMtime[nb])):
-            if DayEqual(date_box[0][i],BOMtime[nb][j]):
-                wind_direction_box0.append(BOMwind_direction[nb][j])
+    for i in range(len(date_box[nb][0])):
+        for j in range(len(date_plot)):
+            if date_box[nb][0][i]==date_plot[j]:
+                wind_direction_box0.append(BOMdaily[j])
     
-    for i in range(len(date_box[1])):
-        for j in range(len(BOMtime[nb])):
-            if DayEqual(date_box[1][i],BOMtime[nb][j]):
-                wind_direction_box1.append(BOMwind_direction[nb][j])
+    for i in range(len(date_box[nb][1])):
+        for j in range(len(date_plot)):
+            if date_box[nb][1][i]==date_plot[j]:
+                wind_direction_box1.append(BOMdaily[j])
     
-    for i in range(len(date_box[2])):
-        for j in range(len(BOMtime[nb])):
-            if DayEqual(date_box[2][i],BOMtime[nb][j]):
-                wind_direction_box2.append(BOMwind_direction[nb][j])
+    for i in range(len(date_box[nb][2])):
+        for j in range(len(date_plot)):
+            if date_box[nb][2][i]==date_plot[j]:
+                wind_direction_box2.append(BOMdaily[j])
     
     x=[wind_direction_box0,wind_direction_box1,wind_direction_box2]
-    fig = plt.figure()
+    fig = plt.figure(figsize=(12,9))
     plt.title(location[nb])
     plt.ylabel('Wind direction (degrees)')
     plt.boxplot(x)
     plt.xticks([1,2,3],['None','Likely','Some'])
     plt.show()
-    fig.savefig("../outputs_observation_data/box_plot_"+str(location[nb])+".png")
+    fig.savefig("../outputs_observation_data/box_plot_"+str(location[nb])+".png",dpi=300)
 
+def DailyAverage():
+    t=[]
+    BOMwind_direction_daily=[]
+    for i in range(0,len(BOMdate)-1):
+        if BOMdate[i]!=BOMdate[i+1]:
+            t.append(BOMdate[i])
+    
+    for j in range(len(t)):
+        for i in range(len(BOMwind_direction)):
+            if t[j]==BOMdate[i]:
+                if t[j]!=BOMdate[i+1]:
+                    BOMwind_direction_daily.append(np.mean(BOMwind_direction[i-23:i+1]))
+
+    return BOMwind_direction_daily, t
 
 def WindDirectionTime(nb):
-    mean=0.
-    meann=[]
-    date_plot=[]
+    
+    fig=plt.figure(figsize=(12,9))
     bluebottlesoupas=[]
     location=['Clovelly','Coogee','Maroubra']
-    for i in range(len(BOMtimeNew)-1):
+    for i in range(len(date_plot)):
         for j in range(len(date[nb])):
-            if DayEqual(date[nb][j],BOMtimeNew[i]):
-                if DayEqual(BOMtimeNew[i],BOMtimeNew[i+1])==False:
-                    bluebottlesoupas.append(bluebottles[nb][j]) 
-                    mean=np.mean(BOMwind_directionNew[:i+1])
-                    meann.append(mean)
-                    date_plot.append(BOMdateNew[i])
+            if date[nb][j]==date_plot[i]:
+                bluebottlesoupas.append(bluebottles[nb][j]) 
     ax=plt.axes()
-    ax.xaxis.set_major_locator(plt.MaxNLocator(nbins=6))
+    years = mdates.YearLocator()   # every year
+    months = mdates.MonthLocator(range(0, 12), interval=2) # every 2month
+    years_fmt = mdates.DateFormatter('%Y')
+    month_fmt = mdates.DateFormatter('%m')
     for i in range(len(bluebottlesoupas)):
         if bluebottlesoupas[i]==1.0:
-            observed=plt.scatter(date_plot[i],meann[i],alpha=0.8,color='deepskyblue')
+            observed=plt.scatter(date_plot[i],BOMdaily[i],color='dodgerblue',s=12)
         elif bluebottlesoupas[i]==0.5:
-            likely=plt.scatter(date_plot[i],meann[i],alpha=0.8,color='lightpink')
+            likely=plt.scatter(date_plot[i],BOMdaily[i],color='lightskyblue',s=12)
         elif bluebottlesoupas[i]==0.:
-            none=plt.scatter(date_plot[i],meann[i],alpha=0.8,color='lightgrey')
+            none=plt.scatter(date_plot[i],BOMdaily[i],color='hotpink',alpha=0.3, marker='+',s=10)
+            
+    ax.xaxis.set_major_locator(years)
+    ax.xaxis.set_major_formatter(years_fmt)
+    ax.xaxis.set_minor_locator(months)
+    ax.xaxis.set_minor_formatter(month_fmt)
+
+    fig.autofmt_xdate()
     plt.ylabel('Wind Direction')
     plt.title(location[nb])
     plt.legend((observed, likely, none),
@@ -359,37 +395,23 @@ def WindDirectionTime(nb):
                 loc='lower right',
                 ncol=3,
                 fontsize=8)
-    plt.show()
+    #plt.show()
+    fig.savefig("../outputs_observation_data/plot_wind_direction"+str(location[nb])+".png",dpi=300)
 
 
 file_name = '../raw_observation_data/bom_port_kembla/all_IDO.csv'
 f=pd.read_csv(file_name)
 
 BOMtime, BOMdate, BOMwater_temp, BOMwind_direction, BOMwind_speed = GetBOMVariables(f)
+BOMdaily,date_plot=DailyAverage()
 
-"""x_none=[]
-x_likely=[]
-x_observed=[]
-for i in range(len(BOMwind_directionNew)):
-    for j in range(len(date[1])): #coogee
-        if DayEqual(BOMtimeNew[i],date[1][j]):
-            if bluebottles[1][j]==0:
-                x_none.append(BOMwind_directionNew[i])
-            elif bluebottles[1][j]==0.5:
-                x_likely.append(BOMwind_directionNew[i])
-            elif bluebottles[1][j]==1.:
-                x_observed.append(BOMwind_directionNew[i])
-            
-fig = plt.figure()
-n, bins, patches=plt.hist([x_none,x_likely,x_observed])
-plotly_fig=plt.tools.mpl_to_plotly(fig)
-plt.iplot(plotly_fig,filename='ehehe-histogram')"""
-#plt.hist(x,bins=30)
-#plt.ylabel('proba')
-
-#for i in range(3):
- #   BoxPlot(i)
+for i in range(3):
+    BoxPlot(i)
 
 #for i in range(len(beach)):
 #    WindDirectionTime(i)
+
+#plt.hist(x,bins=30)
+#plt.ylabel('proba')
+
 
