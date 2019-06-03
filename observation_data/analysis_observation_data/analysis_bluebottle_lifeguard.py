@@ -435,7 +435,35 @@ def GetKurnellData(file):
         date.append(datetime.date(int(year[i]),int(month[i]),int(day[i])))
 
     return date, daily
-    
+
+
+def PolarPlot(nb):
+    blueb=[]
+    daily=[]
+    marqueur=[]
+    fig=plt.figure(figsize=(12,9))
+    location=['Clovelly','Coogee','Maroubra']
+    for i in range(len(daily_kurnell)):
+        for j in range(len(date[nb])):
+            if date_kurnell[i]==date[nb][j]:
+                daily.append(daily_kurnell[i])
+                if bluebottles[nb][j]==0.:
+                    blueb.append('hotpink')
+                elif bluebottles[nb][j]==0.5:
+                    blueb.append('lightskyblue')
+                elif bluebottles[nb][j]==1.:
+                    blueb.append('dodgerblue')
+
+    ax = plt.subplot(111, projection='polar')
+    theta = daily
+    r=8.*np.random.rand(len(daily))+1
+    colors = blueb
+    ax.scatter(theta, r, c=colors,  cmap='hsv', alpha=0.75)
+    ax.set_rorigin(-2.5)
+    ax.set_theta_zero_location('W', offset=10)
+    plt.title(location[nb])
+    plt.show()
+    fig.savefig("../outputs_observation_data/polar_plot_"+str(location[nb])+".png",dpi=300)
 
 file_name_kurnell = '../raw_observation_data/wind_kurnell_sydney_observatory/Kurnell_Data.csv'
 file=pd.read_csv(file_name_kurnell)
@@ -445,6 +473,7 @@ date_kurnell, daily_kurnell=GetKurnellData(df)
 
 #for i in range(len(beach)):
 #    WindDirectionTime(i,date_kurnell,daily_kurnell)
-    
 for i in range(3):
-    BoxPlot(i, date_kurnell, daily_kurnell)
+    PolarPlot(i)   
+#for i in range(3):
+#    BoxPlot(i, date_kurnell, daily_kurnell)
