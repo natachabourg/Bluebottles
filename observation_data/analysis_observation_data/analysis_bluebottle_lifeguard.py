@@ -71,8 +71,12 @@ def GetVariables(filename):
             elif filename.Bluebottles[i]=='likely':
                 bluebottles.append(0.5)
 
-    return date, datee, water_temp, bluebottles, description
-#    return date, datee, water_temp, bluebottles, description
+    final_date = []
+    for l in range(len(datee)):
+        final_date.append(datetime.date(int(datee[l].year), int(datee[l].month), int(datee[l].day)))
+
+    
+    return final_date, water_temp, bluebottles, description
 
 
 def TableDiff(date1,date2,file1,file2):
@@ -237,18 +241,16 @@ def PlotHist():
 files_name = glob.glob('../raw_observation_data/bluebottle_lifeguard_reports/*2.xlsx') #0Clovelly 1Coogee 2Maroubra
 
 beach=[]
-bitchdate=[0,1,2]
 date=[0,1,2]
 water_temp=[0,1,2]
 bluebottles=[0,1,2]
 description=[0,1,2]
-aa=[0,1,2]
 
 for i in range(0,len(files_name)):
     beach.append(pd.read_excel(files_name[i]))
 
 for i in range(0,len(water_temp)):
-    bitchdate[i], date[i], water_temp[i], bluebottles[i], description[i] = GetVariables(beach[i])
+    date[i], water_temp[i], bluebottles[i], description[i] = GetVariables(beach[i])
 
 date_box=[GetDateSomeLikelyNone(0.),GetDateSomeLikelyNone(0.5),GetDateSomeLikelyNone(1.)]
 #PlotHist()
