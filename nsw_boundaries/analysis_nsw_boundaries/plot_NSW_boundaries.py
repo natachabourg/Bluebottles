@@ -4,7 +4,6 @@
 @author : Natacha
 """
 
-
 """
 Read Shapefile, plot NSW boundaries, create a grid 
 """
@@ -46,7 +45,7 @@ lon, lat=GetLonLat(lonmin, lonmax, latmin, latmax, stepsizelon)
 plt.plot(lon, lat, marker='.', color='k', linestyle='none')
 
 """Load & read Matlab file"""
-mat_boundaries = sio.loadmat('NSW_boundary.mat')
+mat_boundaries = sio.loadmat('../raw_nsw_boundaries/NSW_boundary.mat')
 lat_nsw=mat_boundaries['lat_nsw'][0]
 lon_nsw=mat_boundaries['lon_nsw'][0]
 lon_nsw, lat_nsw = LimitBoundaries(lon_nsw, lat_nsw, 149.5)

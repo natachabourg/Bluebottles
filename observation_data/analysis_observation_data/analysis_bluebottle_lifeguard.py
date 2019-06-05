@@ -324,30 +324,30 @@ def BoxPlot(nb,date_plot,BOMdaily):
     for i in range(len(date_box[nb][0])):
         for j in range(len(date_plot)):
             if date_box[nb][0][i]==date_plot[j]:
-                if np.isnan(BOMdaily[j])==False:
-                    wind_direction_box0.append(BOMdaily[j])
+                if np.isnan(BOMdaily[j-1])==False:
+                    wind_direction_box0.append(BOMdaily[j-1])
     
     for i in range(len(date_box[nb][1])):
         for j in range(len(date_plot)):
             if date_box[nb][1][i]==date_plot[j]:
-                if np.isnan(BOMdaily[j])==False:
-                    wind_direction_box1.append(BOMdaily[j])
+                if np.isnan(BOMdaily[j-1])==False:
+                    wind_direction_box1.append(BOMdaily[j-1])
                 
     for i in range(len(date_box[nb][2])):
         for j in range(len(date_plot)):
             if date_box[nb][2][i]==date_plot[j]:
-                if np.isnan(BOMdaily[j])==False:
-                    wind_direction_box2.append(BOMdaily[j])
+                if np.isnan(BOMdaily[j-1])==False:
+                    wind_direction_box2.append(BOMdaily[j-1])
                     
    
     x=[wind_direction_box0, wind_direction_box1, wind_direction_box2]
     fig = plt.figure(figsize=(12,9))
     plt.title(location[nb])
     plt.ylabel('Wind direction (degrees)')
-    plt.boxplot(x)
+    plt.boxplot(x,whis=[5,95])
     plt.xticks([1,2,3],['None','Likely','Some'])
     plt.show()
-    fig.savefig("../outputs_observation_data/box_plot_"+str(location[nb])+".png",dpi=300)
+#    fig.savefig("../outputs_observation_data/box_plot_past_"+str(location[nb])+".png",dpi=300)
 
 def DailyAverage():
     t=[]
@@ -380,11 +380,11 @@ def WindDirectionTime(nb, date_plot, BOMdaily):
     month_fmt = mdates.DateFormatter('%m')
     for i in range(len(bluebottlesoupas)):
         if bluebottlesoupas[i]==1.0:
-            observed=plt.scatter(date_plot[i],BOMdaily[i],color='dodgerblue',s=12)
+            observed=plt.scatter(date_plot[i],BOMdaily[i-1],color='dodgerblue',s=12)
         elif bluebottlesoupas[i]==0.5:
-            likely=plt.scatter(date_plot[i],BOMdaily[i],color='lightskyblue',s=12)
+            likely=plt.scatter(date_plot[i],BOMdaily[i-1],color='palegreen',s=12)
         elif bluebottlesoupas[i]==0.:
-            none=plt.scatter(date_plot[i],BOMdaily[i],color='hotpink',alpha=0.3, marker='+',s=10)
+            none=plt.scatter(date_plot[i],BOMdaily[i-1],color='hotpink',alpha=0.3, marker='+',s=10)
             
     ax.xaxis.set_major_locator(years)
     ax.xaxis.set_major_formatter(years_fmt)
@@ -400,8 +400,8 @@ def WindDirectionTime(nb, date_plot, BOMdaily):
                 loc='lower right',
                 ncol=3,
                 fontsize=8)
-    #plt.show()
-    fig.savefig("../outputs_observation_data/plot_wind_direction"+str(location[nb])+".png",dpi=300)
+    plt.show()
+    fig.savefig("../outputs_observation_data/gust_direction_past_"+str(location[nb])+".png",dpi=300)
 
 
 file_name = '../raw_observation_data/bom_port_kembla/all_IDO.csv'
@@ -422,25 +422,44 @@ def GetKurnellData(file):
     month=np.zeros(len(file))
     year=np.zeros(len(file))
     date=[]
+    wind_u=np.zeros(len(file))
+    wind_v=np.zeros(len(file))
+    max_speed=np.zeros(len(file))
+    max_direction=np.zeros(len(file))
     wind_direction=np.zeros(len(file))
-    daily=np.zeros(len(file))
+    wind_speed=np.zeros(len(file))
+    daily_direction=np.zeros(len(file))
+    daily_speed=np.zeros(len(file))
+    def GetU(daily_speed,daily_direction):
+        wind_u = - daily_speed * np.sin(np.pi / 180 * daily_direction)
+        return wind_u
+    
+    def GetV(daily_speed,daily_direction):
+        wind_v = - daily_speed * np.cos(np.pi / 180 * daily_direction)
+        return wind_v
+    
     for i in range(len(file)):
         day[i]=file.Day[i]
         month[i]=file.Month[i]
         year[i]=file.Year[i]
         wind_direction[i]=file.Wind_direction_00[i]+file.Wind_direction_03[i]+file.Wind_direction_06[i]+file.Wind_direction_09[i]+float(file.Wind_direction_12[i])+float(file.Wind_direction_15[i])+float(file.Wind_direction_18[i])+float(file.Wind_direction_21[i])
-        daily[i]=(wind_direction[i])/8
-
+        daily_direction[i]=(wind_direction[i])/8
+        wind_speed[i]=file.Wind_speed_00[i]+file.Wind_speed_03[i]+file.Wind_speed_06[i]+file.Wind_speed_09[i]+float(file.Wind_speed_12[i])+float(file.Wind_speed_15[i])+float(file.Wind_speed_18[i])+float(file.Wind_speed_21[i])
+        daily_speed[i]=(wind_speed[i])/8
+        wind_u[i]=1/8*GetU(file.Wind_speed_00[i],file.Wind_direction_00[i])+GetU(file.Wind_speed_03[i],file.Wind_direction_03[i])+GetU(file.Wind_speed_06[i],file.Wind_direction_06[i])+GetU(file.Wind_speed_09[i],file.Wind_direction_09[i])+GetU(file.Wind_speed_12[i],file.Wind_direction_12[i])+GetU(file.Wind_speed_15[i],file.Wind_direction_15[i])+GetU(file.Wind_speed_18[i],file.Wind_direction_18[i])+GetU(file.Wind_speed_21[i],file.Wind_direction_21[i])
+        wind_v[i]=1/8*GetV(file.Wind_speed_00[i],file.Wind_direction_00[i])+GetV(file.Wind_speed_03[i],file.Wind_direction_03[i])+GetV(file.Wind_speed_06[i],file.Wind_direction_06[i])+GetV(file.Wind_speed_09[i],file.Wind_direction_09[i])+GetV(file.Wind_speed_12[i],file.Wind_direction_12[i])+GetV(file.Wind_speed_15[i],file.Wind_direction_15[i])+GetV(file.Wind_speed_18[i],file.Wind_direction_18[i])+GetV(file.Wind_speed_21[i],file.Wind_direction_21[i])
+        max_speed[i]=file.max_speed[i]
+        max_direction[i]=file.max_direction[i]
+    
     for i in range(len(file)):
         date.append(datetime.date(int(year[i]),int(month[i]),int(day[i])))
 
-    return date, daily
+    return date, daily_direction, daily_speed, wind_u, wind_v, max_direction, max_speed
 
 
 def PolarPlot(nb):
     blueb=[]
     daily=[]
-    marqueur=[]
     fig=plt.figure(figsize=(12,9))
     location=['Clovelly','Coogee','Maroubra']
     for i in range(len(daily_kurnell)):
@@ -450,7 +469,7 @@ def PolarPlot(nb):
                 if bluebottles[nb][j]==0.:
                     blueb.append('hotpink')
                 elif bluebottles[nb][j]==0.5:
-                    blueb.append('lightskyblue')
+                    blueb.append('palegreen')
                 elif bluebottles[nb][j]==1.:
                     blueb.append('dodgerblue')
 
@@ -469,11 +488,39 @@ file_name_kurnell = '../raw_observation_data/wind_kurnell_sydney_observatory/Kur
 file=pd.read_csv(file_name_kurnell)
 df = file.apply(pd.to_numeric, args=('coerce',)) # inserts NaNs where empty cell!!! grrrr
 
-date_kurnell, daily_kurnell=GetKurnellData(df)
+date_kurnell, daily_kurnell, speed_kurnell, u_kurnell, v_kurnell, max_direction, max_speed=GetKurnellData(df)
 
-#for i in range(len(beach)):
-#    WindDirectionTime(i,date_kurnell,daily_kurnell)
-for i in range(3):
-    PolarPlot(i)   
+def UVplot():
+    years = mdates.YearLocator()   # every year
+    months = mdates.MonthLocator(range(0, 12), interval=2) # every 2month
+    years_fmt = mdates.DateFormatter('%Y')
+    month_fmt = mdates.DateFormatter('%m')
+    fig=plt.figure()
+    ax=plt.subplot(2,1,1)
+    plt.plot(date_kurnell,v_kurnell)
+    plt.ylabel('V')
+    ax1=plt.subplot(2,1,2)
+    plt.plot(date_kurnell,u_kurnell)
+    plt.ylabel('U')
+    ax.xaxis.set_major_locator(years)
+    ax.xaxis.set_major_formatter(years_fmt)
+    ax.xaxis.set_minor_locator(months)
+    ax.xaxis.set_minor_formatter(month_fmt)
+    ax1.xaxis.set_major_locator(years)
+    ax1.xaxis.set_major_formatter(years_fmt)
+    ax1.xaxis.set_minor_locator(months)
+    ax1.xaxis.set_minor_formatter(month_fmt)
+    plt.show()
+    
+#   fig.savefig("../outputs_observation_data/U_V_plot.png",dpi=300)
+
+for i in range(len(beach)):
+    WindDirectionTime(i,date_kurnell,max_direction)
+    
 #for i in range(3):
-#    BoxPlot(i, date_kurnell, daily_kurnell)
+#    PolarPlot(i)
+
+    
+    
+#for i in range(3):
+ #  BoxPlot(i, date_kurnell, max_direction)
