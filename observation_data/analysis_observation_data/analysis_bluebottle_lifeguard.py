@@ -415,13 +415,15 @@ BOMdaily,date_plot=DailyAverage()
 
 """
 Kurnell data 
-"""
+wind_direction[i]=file.Wind_direction_00[i]+file.Wind_direction_03[i]+file.Wind_direction_06[i]+file.Wind_direction_09[i]+float(file.Wind_direction_12[i])+float(file.Wind_direction_15[i])+float(file.Wind_direction_18[i])+float(file.Wind_direction_21[i])
+daily_direction[i]=(wind_direction[i])/8
+wind_speed[i]=file.Wind_speed_00[i]+file.Wind_speed_03[i]+file.Wind_speed_06[i]+file.Wind_speed_09[i]+float(file.Wind_speed_12[i])+float(file.Wind_speed_15[i])+float(file.Wind_speed_18[i])+float(file.Wind_speed_21[i])
+daily_speed[i]=(wind_speed[i])/8 #in m/s
+wind_u[i]=1/8*(GetU(file.Wind_speed_00[i],file.Wind_direction_00[i])+GetU(file.Wind_speed_03[i],file.Wind_direction_03[i])+GetU(file.Wind_speed_06[i],file.Wind_direction_06[i])+GetU(file.Wind_speed_09[i],file.Wind_direction_09[i])+GetU(file.Wind_speed_12[i],file.Wind_direction_12[i])+GetU(file.Wind_speed_15[i],file.Wind_direction_15[i])+GetU(file.Wind_speed_18[i],file.Wind_direction_18[i])+GetU(file.Wind_speed_21[i],file.Wind_direction_21[i]))
+wind_v[i]=1/8*(GetV(file.Wind_speed_00[i],file.Wind_direction_00[i])+GetV(file.Wind_speed_03[i],file.Wind_direction_03[i])+GetV(file.Wind_speed_06[i],file.Wind_direction_06[i])+GetV(file.Wind_speed_09[i],file.Wind_direction_09[i])+GetV(file.Wind_speed_12[i],file.Wind_direction_12[i])+GetV(file.Wind_speed_15[i],file.Wind_direction_15[i])+GetV(file.Wind_speed_18[i],file.Wind_direction_18[i])+GetV(file.Wind_speed_21[i],file.Wind_direction_21[i]))
+max_speed[i]=file.max_speed[i]
+max_direction[i]=file.max_direction[i]
 
-def GetKurnellData(file):
-    day=np.zeros(len(file))
-    month=np.zeros(len(file))
-    year=np.zeros(len(file))
-    date=[]
     wind_u=np.zeros(len(file))
     wind_v=np.zeros(len(file))
     max_speed=np.zeros(len(file))
@@ -430,26 +432,33 @@ def GetKurnellData(file):
     wind_speed=np.zeros(len(file))
     daily_direction=np.zeros(len(file))
     daily_speed=np.zeros(len(file))
+"""
+
+
+
+def GetKurnellData(file):
+    day=np.zeros(len(file))
+    month=np.zeros(len(file))
+    year=np.zeros(len(file))
+    hours=np.zeros(len(file))
+    minutes=np.zeros(len(file))
+    date=[]
+
     def GetU(daily_speed,daily_direction):
-        wind_u = - daily_speed * np.sin(np.pi / 180 * daily_direction)
+        wind_u = - daily_speed/3.6 * np.sin(np.pi / 180 * daily_direction) 
         return wind_u
     
     def GetV(daily_speed,daily_direction):
-        wind_v = - daily_speed * np.cos(np.pi / 180 * daily_direction)
+        wind_v = - daily_speed/3.6 * np.cos(np.pi / 180 * daily_direction)
         return wind_v
     
     for i in range(len(file)):
-        day[i]=file.Day[i]
-        month[i]=file.Month[i]
-        year[i]=file.Year[i]
-        wind_direction[i]=file.Wind_direction_00[i]+file.Wind_direction_03[i]+file.Wind_direction_06[i]+file.Wind_direction_09[i]+float(file.Wind_direction_12[i])+float(file.Wind_direction_15[i])+float(file.Wind_direction_18[i])+float(file.Wind_direction_21[i])
-        daily_direction[i]=(wind_direction[i])/8
-        wind_speed[i]=file.Wind_speed_00[i]+file.Wind_speed_03[i]+file.Wind_speed_06[i]+file.Wind_speed_09[i]+float(file.Wind_speed_12[i])+float(file.Wind_speed_15[i])+float(file.Wind_speed_18[i])+float(file.Wind_speed_21[i])
-        daily_speed[i]=(wind_speed[i])/8
-        wind_u[i]=1/8*GetU(file.Wind_speed_00[i],file.Wind_direction_00[i])+GetU(file.Wind_speed_03[i],file.Wind_direction_03[i])+GetU(file.Wind_speed_06[i],file.Wind_direction_06[i])+GetU(file.Wind_speed_09[i],file.Wind_direction_09[i])+GetU(file.Wind_speed_12[i],file.Wind_direction_12[i])+GetU(file.Wind_speed_15[i],file.Wind_direction_15[i])+GetU(file.Wind_speed_18[i],file.Wind_direction_18[i])+GetU(file.Wind_speed_21[i],file.Wind_direction_21[i])
-        wind_v[i]=1/8*GetV(file.Wind_speed_00[i],file.Wind_direction_00[i])+GetV(file.Wind_speed_03[i],file.Wind_direction_03[i])+GetV(file.Wind_speed_06[i],file.Wind_direction_06[i])+GetV(file.Wind_speed_09[i],file.Wind_direction_09[i])+GetV(file.Wind_speed_12[i],file.Wind_direction_12[i])+GetV(file.Wind_speed_15[i],file.Wind_direction_15[i])+GetV(file.Wind_speed_18[i],file.Wind_direction_18[i])+GetV(file.Wind_speed_21[i],file.Wind_direction_21[i])
-        max_speed[i]=file.max_speed[i]
-        max_direction[i]=file.max_direction[i]
+        minutes[i]=file.MI_local_time[i]
+        hours[i]=file.HH24[i]
+        day[i]=file.DD[i]
+        month[i]=file.MM[i]
+        year[i]=file.YY[i]
+
     
     for i in range(len(file)):
         date.append(datetime.date(int(year[i]),int(month[i]),int(day[i])))
@@ -457,15 +466,23 @@ def GetKurnellData(file):
     return date, daily_direction, daily_speed, wind_u, wind_v, max_direction, max_speed
 
 
-def PolarPlot(nb):
+
+for i in range(T):
+    tt0 = np.where(day_w == t[i])[0] #prend lindice de quand c egal
+    Wind_speed_ms_Daily[i] = np.mean(nonans(Wind_speed_ms[tt0.astype(int)]))
+
+t is the days that we want
+
+
+def PolarPlot(nb,direction):
     blueb=[]
     daily=[]
     fig=plt.figure(figsize=(12,9))
     location=['Clovelly','Coogee','Maroubra']
-    for i in range(len(daily_kurnell)):
+    for i in range(len(direction)):
         for j in range(len(date[nb])):
             if date_kurnell[i]==date[nb][j]:
-                daily.append(daily_kurnell[i])
+                daily.append(direction[i])
                 if bluebottles[nb][j]==0.:
                     blueb.append('hotpink')
                 elif bluebottles[nb][j]==0.5:
@@ -488,7 +505,7 @@ file_name_kurnell = '../raw_observation_data/wind_kurnell_sydney_observatory/Kur
 file=pd.read_csv(file_name_kurnell)
 df = file.apply(pd.to_numeric, args=('coerce',)) # inserts NaNs where empty cell!!! grrrr
 
-date_kurnell, daily_kurnell, speed_kurnell, u_kurnell, v_kurnell, max_direction, max_speed=GetKurnellData(df)
+date_kurnell, direction_kurnell, speed_kurnell, u_kurnell, v_kurnell, max_direction, max_speed=GetKurnellData(df)
 
 def UVplot():
     years = mdates.YearLocator()   # every year
@@ -514,13 +531,13 @@ def UVplot():
     
 #   fig.savefig("../outputs_observation_data/U_V_plot.png",dpi=300)
 
-for i in range(len(beach)):
-    WindDirectionTime(i,date_kurnell,max_direction)
+#for i in range(len(beach)):
+ #   WindDirectionTime(i,date_kurnell,max_direction)
     
 #for i in range(3):
 #    PolarPlot(i)
 
-    
+UVplot()
     
 #for i in range(3):
  #  BoxPlot(i, date_kurnell, max_direction)
