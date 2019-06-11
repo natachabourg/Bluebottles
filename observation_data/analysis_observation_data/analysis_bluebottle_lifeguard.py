@@ -471,7 +471,6 @@ for i in range(T):
     tt0 = np.where(day_w == t[i])[0] #prend lindice de quand c egal
     Wind_speed_ms_Daily[i] = np.mean(nonans(Wind_speed_ms[tt0.astype(int)]))
 
-t is the days that we want
 
 
 def PolarPlot(nb,direction):

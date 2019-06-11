@@ -6,16 +6,14 @@ Created on Thu June 06 12:10:20 2019
 """
 import scipy.stats as stats
 import datetime
+#import colorlover as cl
+#import plotly.graph_objs as go
 import pandas as pd
 import datetime
 import numpy as np
 from matplotlib import pyplot as plt
 import glob 
-import matplotlib.ticker as ticker
-from astropy.table import Table, Column
-from astropy.io import ascii
-from dateutil.parser import parse
-import matplotlib.dates as mdates
+from windrose import plot_windrose
 
 class time:
     def __init__(self, day, month, year):
@@ -29,12 +27,59 @@ class time:
         for i in range(len(list_name)):
             if self.month==list_name[i]:
                 self.month=list_numbers[i]
+               
+
+def GetDateSomeLikelyNone(beach_nb,bluebottle_nb):
+    date_number = []
+    for j in range(len(date[beach_nb])):
+        if bluebottles[beach_nb][j]==bluebottle_nb:
+            date_number.append(date[beach_nb][j])
+    return date_number
                 
 def DayEqual(object1, object2):
     if object1.day==object2.day and object1.month==object2.month and object1.year==object2.year:
         return True
     else:
         return False
+    
+    
+
+def BoxPlot(nb,date_plot,BOMdaily):   
+    """
+    Box plot pour la plage numero nb de wind direction pour les 3 cas : none likely observed
+    """
+    location=['Clovelly','Coogee','Maroubra']
+    wind_direction_box0=[]
+    wind_direction_box1=[]
+    wind_direction_box2=[]
+    
+    for i in range(len(date_box[nb][0])):
+        for j in range(len(date_plot)):
+            if date_box[nb][0][i]==date_plot[j]:
+                if np.isnan(BOMdaily[j-1])==False:
+                    wind_direction_box0.append(BOMdaily[j-1])
+    
+    for i in range(len(date_box[nb][1])):
+        for j in range(len(date_plot)):
+            if date_box[nb][1][i]==date_plot[j]:
+                if np.isnan(BOMdaily[j-1])==False:
+                    wind_direction_box1.append(BOMdaily[j-1])
+                
+    for i in range(len(date_box[nb][2])):
+        for j in range(len(date_plot)):
+            if date_box[nb][2][i]==date_plot[j]:
+                if np.isnan(BOMdaily[j-1])==False:
+                    wind_direction_box2.append(BOMdaily[j-1])
+                    
+   
+    x=[wind_direction_box0, wind_direction_box1, wind_direction_box2]
+    fig = plt.figure(figsize=(12,9))
+    plt.title(location[nb])
+    plt.ylabel('Wind direction (degrees)')
+    plt.boxplot(x,whis=[5,95])
+    plt.xticks([1,2,3],['None','Likely','Some'])
+    plt.show()
+    
 def GetVariables(filename):
     """
     Return date, water temp, #of bluebottles of a file
@@ -100,6 +145,7 @@ for i in range(0,len(files_name)):
 
 for i in range(0,len(water_temp)):
     date[i], water_temp[i], bluebottles[i], description[i] = GetVariables(beach[i])
+    date_box[i]=[GetDateSomeLikelyNone(i,0.),GetDateSomeLikelyNone(i,0.5),GetDateSomeLikelyNone(i,1.)]
 
 def nonans(array):
     '''
@@ -127,7 +173,7 @@ def GetData(file):
     u=np.zeros(len(file))
     v=np.zeros(len(file))
     date=[]
-
+    
     def GetU(speed,direction):
         wind_dir_deg=(90-direction+180)
         wind_u = - speed * np.sin(np.pi / 180 * wind_dir_deg) 
@@ -156,24 +202,67 @@ def GetData(file):
 
     return date, time, speed, direction, u, v
 
+
+def RosePlot(beachnb,bluebnb):
+    """
+    returns a rose plot of the wind for the past day for the beach beachnb
+    and for the bluebottle scenario bluenb (0:none, 1:likely, 2:some) 
+    """
+    location=['Clovelly','Coogee','Maroubra']
+    blueb=['none','likely','some']
+    wind_speed=[]
+    wind_direction=[]
+    one_day = datetime.timedelta(days=1)
+    for i in range(len(date_obs)):
+        for j in range(len(date_box[beachnb][bluebnb])):
+                if (date_obs[i]+one_day)==date_box[beachnb][bluebnb][j]:
+                    wind_speed.append(speed_obs[i])
+                    wind_direction.append(direction_obs[i])
+
+    df = pd.DataFrame({"speed": wind_speed, "direction": wind_direction})
+    bins = np.arange(0.01, 24, 4)
+    kind = "bar"
+    plot_windrose(df, kind=kind, normed=True, opening=0.8, edgecolor="white",bins=bins)
+  #  plt.set_title(str(location[beachnb])+" "+str(blueb[bluebnb]))
+    plt.savefig("../outputs_observation_data/rose"+str(location[beachnb])+"_"+str(blueb[bluebnb])+"_pastday.png")
+
+
 file_name = '../raw_observation_data/wind_kurnell_sydney_observatory/wind_66037_local_time.csv'
 filename=pd.read_csv(file_name)
 df = filename.apply(pd.to_numeric, args=('coerce',)) # inserts NaNs where empty cell!!! grrrr
 date_obs, time_obs, speed_obs, direction_obs, u_obs, v_obs=GetData(df)
-
+date_obs=date_obs[450500:]
+time_obs=time_obs[450500:]
+speed_obs=speed_obs[450500:]
+direction_obs=direction_obs[450500:]
+u_obs=u_obs[450500:]
+v_obs=v_obs[450500:]
 
 t=time_obs.astype('int')
 
-wind_speed_ms_daily = np.zeros((len(t)))+np.nan
+wind_direction_daily = np.zeros((len(t)))+np.nan
+wind_speed_daily = np.zeros((len(t)))+np.nan
 LENN = np.zeros((len(t)))
-
 
 for i in range(len(t)):
     tt0=np.where(time_obs==t[i])[0]
-    LENN[i]=sum(np.isfinite(speed_obs[tt0.astype(int)]))
+    LENN[i]=sum(np.isfinite(direction_obs[tt0.astype(int)]))
     if LENN[i]>0:
-        wind_speed_ms_daily[i]=np.mean(nonans(speed_obs[tt0.astype(int)]))
-    
+        wind_direction_daily[i]=np.mean(nonans(direction_obs[tt0.astype(int)]))
+        wind_speed_daily[i]=np.mean(nonans(speed_obs[tt0.astype(int)]))
+
+#BoxPlot(1,date_obs,wind_direction_daily)
+RosePlot(0,0)
+RosePlot(0,1)
+RosePlot(0,2)
+
+RosePlot(1,0)
+RosePlot(1,1)
+RosePlot(1,2)
+
+RosePlot(2,0)
+RosePlot(2,1)
+RosePlot(2,2)
 """
 timeseries plot
 import cmocean
@@ -207,5 +296,3 @@ cbar=plt.colorbar(sc)
 cbar.set_label('Wind direction in degree')
 fig.savefig("../outputs_observation_data/sydney_obs/timeseries_bb_only_maroubra_past.png",dpi=300)
 """
-
-
