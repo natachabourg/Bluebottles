@@ -4,17 +4,14 @@ Created on Thu May 22 10:14:40 2019
 
 @author : Natacha 
 """
-import scipy.stats as stats
+from matplotlib.lines import Line2D
 import datetime
 import pandas as pd
 import datetime
 import numpy as np
 from matplotlib import pyplot as plt
 import glob 
-import matplotlib.ticker as ticker
-from astropy.table import Table, Column
 from astropy.io import ascii
-from dateutil.parser import parse
 import matplotlib.dates as mdates
 
 """
@@ -415,6 +412,7 @@ BOMdaily,date_plot=DailyAverage()
 
 """
 Kurnell data 
+
 wind_direction[i]=file.Wind_direction_00[i]+file.Wind_direction_03[i]+file.Wind_direction_06[i]+file.Wind_direction_09[i]+float(file.Wind_direction_12[i])+float(file.Wind_direction_15[i])+float(file.Wind_direction_18[i])+float(file.Wind_direction_21[i])
 daily_direction[i]=(wind_direction[i])/8
 wind_speed[i]=file.Wind_speed_00[i]+file.Wind_speed_03[i]+file.Wind_speed_06[i]+file.Wind_speed_09[i]+float(file.Wind_speed_12[i])+float(file.Wind_speed_15[i])+float(file.Wind_speed_18[i])+float(file.Wind_speed_21[i])
@@ -466,11 +464,11 @@ def GetKurnellData(file):
     return date, daily_direction, daily_speed, wind_u, wind_v, max_direction, max_speed
 
 
-
-for i in range(T):
+"""
+for i in range(len(t)):
     tt0 = np.where(day_w == t[i])[0] #prend lindice de quand c egal
     Wind_speed_ms_Daily[i] = np.mean(nonans(Wind_speed_ms[tt0.astype(int)]))
-
+"""
 
 
 def PolarPlot(nb,direction):
@@ -480,8 +478,8 @@ def PolarPlot(nb,direction):
     location=['Clovelly','Coogee','Maroubra']
     for i in range(len(direction)):
         for j in range(len(date[nb])):
-            if date_kurnell[i]==date[nb][j]:
-                daily.append(direction[i])
+            if date_plot[i]+datetime.timedelta(days=1)==date[nb][j]: #date_kurnell
+                daily.append(direction[i]*np.pi/180)
                 if bluebottles[nb][j]==0.:
                     blueb.append('hotpink')
                 elif bluebottles[nb][j]==0.5:
@@ -493,18 +491,24 @@ def PolarPlot(nb,direction):
     theta = daily
     r=8.*np.random.rand(len(daily))+1
     colors = blueb
+    legend_elements = [Line2D([0],[0],marker='o',label='None', color='w',markerfacecolor='hotpink', markersize=10),
+                       Line2D([0],[0],marker='o',label='Likely', color='w',markerfacecolor='palegreen', markersize=10),
+                       Line2D([0],[0],marker='o',label='Observed', color='w',markerfacecolor='dodgerblue', markersize=10)]
+
+    legend1=plt.legend(handles=legend_elements, loc='lower right')
+    ax.add_artist(legend1)
     ax.scatter(theta, r, c=colors,  cmap='hsv', alpha=0.75)
     ax.set_rorigin(-2.5)
     ax.set_theta_zero_location('W', offset=10)
-    plt.title(location[nb])
+    plt.title("Daily averaged wind direction (day before) at "+str(location[nb]))
     plt.show()
-    fig.savefig("../outputs_observation_data/polar_plot_"+str(location[nb])+".png",dpi=300)
+    fig.savefig("../outputs_observation_data/with_BOMdata/polar_plot_"+str(location[nb])+".png",dpi=300)
 
-file_name_kurnell = '../raw_observation_data/wind_kurnell_sydney_observatory/Kurnell_Data.csv'
-file=pd.read_csv(file_name_kurnell)
-df = file.apply(pd.to_numeric, args=('coerce',)) # inserts NaNs where empty cell!!! grrrr
+#file_name_kurnell = '../raw_observation_data/wind_kurnell_sydney_observatory/Kurnell_Data.csv'
+#file=pd.read_csv(file_name_kurnell)
+#df = file.apply(pd.to_numeric, args=('coerce',)) # inserts NaNs where empty cell!!! grrrr
 
-date_kurnell, direction_kurnell, speed_kurnell, u_kurnell, v_kurnell, max_direction, max_speed=GetKurnellData(df)
+#date_kurnell, direction_kurnell, speed_kurnell, u_kurnell, v_kurnell, max_direction, max_speed=GetKurnellData(df)
 
 def UVplot():
     years = mdates.YearLocator()   # every year
@@ -533,10 +537,10 @@ def UVplot():
 #for i in range(len(beach)):
  #   WindDirectionTime(i,date_kurnell,max_direction)
     
-#for i in range(3):
-#    PolarPlot(i)
+for i in range(3):
+    PolarPlot(i,BOMdaily)
 
-UVplot()
+#UVplot()
     
 #for i in range(3):
  #  BoxPlot(i, date_kurnell, max_direction)
