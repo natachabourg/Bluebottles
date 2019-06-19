@@ -255,7 +255,7 @@ def RosePlot(beachnb,bluebnb,date_obs,direction_obs,speed_obs):
     blueb=['none','likely','some']
     wind_speed=[]
     wind_direction=[]
-    one_day = datetime.timedelta(days=1)
+    one_day = datetime.timedelta(days=2)
     for i in range(len(date_obs)):
         for j in range(len(date_box[beachnb][bluebnb])):
                 if (date_obs[i]+one_day)==date_box[beachnb][bluebnb][j]:
@@ -266,13 +266,13 @@ def RosePlot(beachnb,bluebnb,date_obs,direction_obs,speed_obs):
     bins = np.arange(0.01, 24, 4)
     bins_new=np.arange(11.25,371.25,22.5)
     kind = "bar"
-   # fig=plt.figure()
-  #  plot_windrose(df, kind=kind, normed=True, opening=0.8, edgecolor="white",bins=bins)
-  #  plt.title("Daily averaged wind direction at "+str(location[beachnb])+" "+str(blueb[bluebnb]))
-    fig2=plt.figure()
-    plt.hist(wind_direction,bins_new)
+    fig=plt.figure()
+    plot_windrose(df, kind=kind, normed=True, opening=0.8, edgecolor="white",bins=bins)
+    plt.title("Daily averaged wind direction at "+str(location[beachnb])+" "+str(blueb[bluebnb]))
+ #   fig2=plt.figure()
+  #  plt.hist(wind_direction,bins_new)
     
-    fig2.savefig("../outputs_observation_data/sydney_obs/rose_plots/hist"+str(location[beachnb])+"_"+str(blueb[bluebnb])+".png",dpi=300)
+    fig.savefig("../outputs_observation_data/sydney_obs/rose_plots/2_days/rose_two_"+str(location[beachnb])+"_"+str(blueb[bluebnb])+".png",dpi=300)
 
 
 def TimeSeriesPlot():
@@ -338,7 +338,7 @@ for i in range(len(t)):
 u_daily=GetU(wind_speed_daily, wind_direction_daily)
 v_daily=GetV(wind_speed_daily, wind_direction_daily)
 
-TimeSeriesPlot()
+#TimeSeriesPlot()
 #PolarPlot(0, wind_direction_daily, wind_speed_daily)
 #PolarPlot(1, wind_direction_daily, wind_speed_daily)
 #PolarPlot(2, wind_direction_daily, wind_speed_daily)
@@ -346,17 +346,17 @@ TimeSeriesPlot()
 #BoxPlot(1,date_obs,wind_direction_daily)
 
 
-RosePlot(0,0,date_obs_full,direction_obs,speed_obs)
-RosePlot(0,1,date_obs_full,direction_obs,speed_obs)
-RosePlot(0,2,date_obs_full,direction_obs,speed_obs)
+RosePlot(0,0,date_obs,wind_direction_daily,wind_speed_daily)
+RosePlot(0,1,date_obs,wind_direction_daily,wind_speed_daily)
+RosePlot(0,2,date_obs,wind_direction_daily,wind_speed_daily)
 
-RosePlot(1,0,date_obs_full,direction_obs,speed_obs)
-RosePlot(1,1,date_obs_full,direction_obs,speed_obs)
-RosePlot(1,2,date_obs_full,direction_obs,speed_obs)
+RosePlot(1,0,date_obs,wind_direction_daily,wind_speed_daily)
+RosePlot(1,1,date_obs,wind_direction_daily,wind_speed_daily)
+RosePlot(1,2,date_obs,wind_direction_daily,wind_speed_daily)
 
-RosePlot(2,0,date_obs_full,direction_obs,speed_obs)
-RosePlot(2,1,date_obs_full,direction_obs,speed_obs)
-RosePlot(2,2,date_obs_full,direction_obs,speed_obs)
+RosePlot(2,0,date_obs,wind_direction_daily,wind_speed_daily)
+RosePlot(2,1,date_obs,wind_direction_daily,wind_speed_daily)
+RosePlot(2,2,date_obs,wind_direction_daily,wind_speed_daily)
 
 """
 timeseries plot
