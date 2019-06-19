@@ -40,8 +40,6 @@ def DayEqual(object1, object2):
     else:
         return False
     
-    
-
 def BoxPlot(nb,date_plot,BOMdaily):   
     """
     Box plot pour la plage numero nb de wind direction pour les 3 cas : none likely observed
@@ -50,33 +48,33 @@ def BoxPlot(nb,date_plot,BOMdaily):
     wind_direction_box0=[]
     wind_direction_box1=[]
     wind_direction_box2=[]
-    
+    one_day = datetime.timedelta(days=1)
     for i in range(len(date_box[nb][0])):
         for j in range(len(date_plot)):
-            if date_box[nb][0][i]==date_plot[j]:
-                if np.isnan(BOMdaily[j-1])==False:
-                    wind_direction_box0.append(BOMdaily[j-1])
-    
+            if date_box[nb][0][i]==(date_plot[j]+one_day):
+                if np.isnan(BOMdaily[j])==False:
+                    wind_direction_box0.append(BOMdaily[j])
+
     for i in range(len(date_box[nb][1])):
         for j in range(len(date_plot)):
-            if date_box[nb][1][i]==date_plot[j]:
-                if np.isnan(BOMdaily[j-1])==False:
-                    wind_direction_box1.append(BOMdaily[j-1])
-                
+            if date_box[nb][1][i]==(date_plot[j]+one_day):
+                if np.isnan(BOMdaily[j])==False:
+                    wind_direction_box1.append(BOMdaily[j])
+
     for i in range(len(date_box[nb][2])):
         for j in range(len(date_plot)):
-            if date_box[nb][2][i]==date_plot[j]:
-                if np.isnan(BOMdaily[j-1])==False:
-                    wind_direction_box2.append(BOMdaily[j-1])
-                    
-   
+            if date_box[nb][2][i]==(date_plot[j]+one_day):
+                if np.isnan(BOMdaily[j])==False:
+                    wind_direction_box2.append(BOMdaily[j])
+
+
     x=[wind_direction_box0, wind_direction_box1, wind_direction_box2]
     fig = plt.figure(figsize=(12,9))
-    plt.title(location[nb])
+    plt.title(location[nb]+" 1 day before")
     plt.ylabel('Wind direction (degrees)')
     plt.boxplot(x,whis=[5,95])
     plt.xticks([1,2,3],['None','Likely','Some'])
-    plt.show()
+    fig.savefig("../outputs_observation_data/sydney_obs/box_plots/oneday_"+str(location[nb])+".png",dpi=300)
     
 def GetVariables(filename):
     """
@@ -255,7 +253,7 @@ def RosePlot(beachnb,bluebnb,date_obs,direction_obs,speed_obs):
     blueb=['none','likely','some']
     wind_speed=[]
     wind_direction=[]
-    one_day = datetime.timedelta(days=2)
+    one_day = datetime.timedelta(days=1)
     for i in range(len(date_obs)):
         for j in range(len(date_box[beachnb][bluebnb])):
                 if (date_obs[i]+one_day)==date_box[beachnb][bluebnb][j]:
@@ -268,11 +266,11 @@ def RosePlot(beachnb,bluebnb,date_obs,direction_obs,speed_obs):
     kind = "bar"
     fig=plt.figure()
     plot_windrose(df, kind=kind, normed=True, opening=0.8, edgecolor="white",bins=bins)
-    plt.title("Daily averaged wind direction at "+str(location[beachnb])+" "+str(blueb[bluebnb]))
+    plt.title("Daily averaged wind direction 7 days before at "+str(location[beachnb])+" "+str(blueb[bluebnb]))
  #   fig2=plt.figure()
   #  plt.hist(wind_direction,bins_new)
     
-    fig.savefig("../outputs_observation_data/sydney_obs/rose_plots/2_days/rose_two_"+str(location[beachnb])+"_"+str(blueb[bluebnb])+".png",dpi=300)
+    plt.savefig("../outputs_observation_data/sydney_obs/rose_plots/7_days/rose_seven_"+str(location[beachnb])+"_"+str(blueb[bluebnb])+".png",dpi=300)
 
 
 def TimeSeriesPlot():
@@ -343,8 +341,13 @@ v_daily=GetV(wind_speed_daily, wind_direction_daily)
 #PolarPlot(1, wind_direction_daily, wind_speed_daily)
 #PolarPlot(2, wind_direction_daily, wind_speed_daily)
 
-#BoxPlot(1,date_obs,wind_direction_daily)
+BoxPlot(0,date_obs,wind_direction_daily)
+BoxPlot(1,date_obs,wind_direction_daily)
+BoxPlot(2,date_obs,wind_direction_daily)
 
+
+
+"""
 
 RosePlot(0,0,date_obs,wind_direction_daily,wind_speed_daily)
 RosePlot(0,1,date_obs,wind_direction_daily,wind_speed_daily)
@@ -358,7 +361,6 @@ RosePlot(2,0,date_obs,wind_direction_daily,wind_speed_daily)
 RosePlot(2,1,date_obs,wind_direction_daily,wind_speed_daily)
 RosePlot(2,2,date_obs,wind_direction_daily,wind_speed_daily)
 
-"""
 timeseries plot
 import cmocean
 fig=plt.figure()
