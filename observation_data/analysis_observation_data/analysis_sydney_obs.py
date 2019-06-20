@@ -10,6 +10,7 @@ from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
 import pandas as pd
 import numpy as np
+import math
 import glob 
 from windrose import plot_windrose
 
@@ -242,7 +243,7 @@ def PolarPlot(nb,direction,speed):
     ax.add_artist(legend1)
     ax.add_artist(legend2)
     plt.show()
-    fig.savefig("../outputs_observation_data/sydney_obs/polar_plot_"+str(location[nb])+".png",dpi=300)
+    fig.savefig("../outputs_observation_data/sydney_obs/polar_plot_"+str(location[nb])+"_pastday.png",dpi=300)
 
 def RosePlot(beachnb,bluebnb,date_obs,direction_obs,speed_obs):
     """
@@ -262,15 +263,15 @@ def RosePlot(beachnb,bluebnb,date_obs,direction_obs,speed_obs):
 
     df = pd.DataFrame({"speed": wind_speed, "direction": wind_direction})
     bins = np.arange(0.01, 24, 4)
-    bins_new=np.arange(11.25,371.25,22.5)
+    bins_new=np.arange(-11.25,371.25,22.5)
     kind = "bar"
-    fig=plt.figure()
+  #  fig=plt.figure()
     plot_windrose(df, kind=kind, normed=True, opening=0.8, edgecolor="white",bins=bins)
-    plt.title("Daily averaged wind direction 7 days before at "+str(location[beachnb])+" "+str(blueb[bluebnb]))
+    plt.title("Daily averaged wind direction 1 day before at "+str(location[beachnb])+" "+str(blueb[bluebnb]))
  #   fig2=plt.figure()
   #  plt.hist(wind_direction,bins_new)
     
-    plt.savefig("../outputs_observation_data/sydney_obs/rose_plots/7_days/rose_seven_"+str(location[beachnb])+"_"+str(blueb[bluebnb])+".png",dpi=300)
+    plt.savefig("../outputs_observation_data/sydney_obs/daily_averaged/rose"+str(location[beachnb])+"_"+str(blueb[bluebnb])+".png",dpi=300)
 
 
 def TimeSeriesPlot():
@@ -296,7 +297,7 @@ def TimeSeriesPlot():
     plt.plot(date_obs,v_daily)
     plt.ylabel('daily averaged V')
     plt.show()
-  #  fig.savefig("../outputs_observation_data/sydney_obs/timeseries_5.png",dpi=300)
+    fig.savefig("../outputs_observation_data/sydney_obs/timeseries_5.png",dpi=300)
 
 
 file_name = '../raw_observation_data/wind_kurnell_sydney_observatory/wind_66037_local_time.csv'
@@ -313,41 +314,63 @@ gust_speed=gust_speed[450500:]
 u_obs=GetU(speed_obs,direction_obs)
 v_obs=GetV(speed_obs,direction_obs)
 
+def average_angles(angles):
+    """
+    @author : Christian Aichinger 
+    Average (mean) of angles
+    
+    Return the average of an input sequence of angles. The result is between
+    ``0`` and ``2 * math.pi``.
+    If the average is not defined (e.g. ``average_angles([0, math.pi]))``,
+    a ``ValueError`` is raised.
+    """
 
+    x = sum(math.cos(a) for a in angles)
+    y = sum(math.sin(a) for a in angles)
+
+    if x == 0 and y == 0:
+        raise ValueError(
+            "The angle average of the inputs is undefined: %r" % angles)
+
+    # To get outputs from -pi to +pi, delete everything but math.atan2() here.
+    return math.fmod(math.atan2(y, x) + 2 * math.pi, 2 * math.pi)
 
 t=[]
 for i in range(len(time_obs)):
     t.append(time_obs[i].astype('int')) #list of days in time format
 t=list(dict.fromkeys(t[:])) #remove repetition
-
 wind_direction_daily = np.zeros((len(t)))
 wind_speed_daily = np.zeros((len(t)))
 LENN = np.zeros((len(t)))
 time_new=[]
+direction_obs_rad=direction_obs*np.pi/180
 for i in range (len(time_obs)):
     time_new.append(int(time_obs[i]))
 for i in range(len(t)):
-    tt0=np.where(time_new==t[i]) #find all items from the same day
-    LENN[i]=sum(np.isfinite(direction_obs[tt0]))
+    tt0 = np.where(time_new==t[i]) #find all items from the same day
+    LENN[i] = sum(np.isfinite(direction_obs[tt0]))
     if LENN[i]>0:
-        wind_direction_daily[i]=np.mean(nonans(direction_obs[tt0])) #daily mean of wind direction
-        wind_speed_daily[i]=np.mean(nonans(speed_obs[tt0])) #daily mean of wind speed
-        
+        wind_direction_daily[i] = average_angles(nonans(direction_obs_rad[tt0])) #daily mean of wind direction
+        wind_speed_daily[i] = np.mean(nonans(speed_obs[tt0])) #daily mean of wind speed
+wind_direction_daily=wind_direction_daily*180/np.pi
 u_daily=GetU(wind_speed_daily, wind_direction_daily)
 v_daily=GetV(wind_speed_daily, wind_direction_daily)
 
 #TimeSeriesPlot()
-#PolarPlot(0, wind_direction_daily, wind_speed_daily)
-#PolarPlot(1, wind_direction_daily, wind_speed_daily)
-#PolarPlot(2, wind_direction_daily, wind_speed_daily)
+BoxPlot(0,date_obs,wind_direction_daily)
+BoxPlot(1,date_obs,wind_direction_daily)
+BoxPlot(2,date_obs,wind_direction_daily)
+"""
+PolarPlot(0, wind_direction_daily, wind_speed_daily)
+PolarPlot(1, wind_direction_daily, wind_speed_daily)
+PolarPlot(2, wind_direction_daily, wind_speed_daily)
+
 
 BoxPlot(0,date_obs,wind_direction_daily)
 BoxPlot(1,date_obs,wind_direction_daily)
 BoxPlot(2,date_obs,wind_direction_daily)
 
 
-
-"""
 
 RosePlot(0,0,date_obs,wind_direction_daily,wind_speed_daily)
 RosePlot(0,1,date_obs,wind_direction_daily,wind_speed_daily)
@@ -360,6 +383,7 @@ RosePlot(1,2,date_obs,wind_direction_daily,wind_speed_daily)
 RosePlot(2,0,date_obs,wind_direction_daily,wind_speed_daily)
 RosePlot(2,1,date_obs,wind_direction_daily,wind_speed_daily)
 RosePlot(2,2,date_obs,wind_direction_daily,wind_speed_daily)
+
 
 timeseries plot
 import cmocean
