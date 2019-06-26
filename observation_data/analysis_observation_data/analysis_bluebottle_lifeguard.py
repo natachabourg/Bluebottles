@@ -13,6 +13,7 @@ from matplotlib import pyplot as plt
 import glob 
 from astropy.io import ascii
 import matplotlib.dates as mdates
+from astropy.table import Table, Column
 
 """
 Lifeguard reports data
@@ -172,6 +173,9 @@ def TableMonthBeach():
     yearr=[2016,2017,2018,2019]
     month=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
     monthh=[1,2,3,4,5,6,7,8,9,10,11,12]
+    f, (ax1, ax2, ax3, ax4) = plt.subplots(4, sharey=True, sharex=True)
+    ax=[ax1, ax2, ax3, ax4]
+    plt.xticks(xbar, ('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'))
     for y in range(len(yearr)):
         for i in range(len(date)):
             observed_month[i]=[0 for i in range(0,12)]
@@ -192,22 +196,13 @@ def TableMonthBeach():
                             percentage_none_month[i][m]=np.divide(100.*none_month[i][m],observed_month[i][m]+likely_month[i][m]+none_month[i][m])
             month_beach=Table([month,observed_month[i][:12],likely_month[i][:12],none_month[i][:12], percentage_none_month[i][:12]],names=('Month','Observed','Likely','Noone','% of None'))
             ascii.write(month_beach, '../outputs_observation_data/monthly_bluebottles_'+str(yearr[y])+'_'+location[i]+'.csv', format='csv', fast_writer=False, overwrite=True)  
-
-    """
-    ax=plt.axes()
-    x=[1,2,3,4,5,6,7,8,9,10,11,12]
-    width=0.25
-    observed0=[observed_month[1][i] for i in range(12)]
-    likely0=[likely_month[1][i] for i in range(12)]
-    none0=[none_month[1][i] for i in range(12)]
-    ax.bar(x,observed0,width)
-    ax.bar(x+width,likely0,width,color='C2')
-    ax.bar(x+2*width,none0,width,color='C3')
-    ax.set_xticks(x+width)
-    ax.set_xticklabels(['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'])
-
-    ax.hist()
-    plt.show()"""
+        xbar=np.arange(0,12)
+        ax[y].set_ylabel('# observations')
+         ax[y].bar(xbar-width/2, observed_month[0], width=0.2, color='dodgerblue', align='center',label='observed')
+         ax[y].bar(xbar+width/2, none_month[0], width=0.2, color='hotpink', align='center',label='none')
+         plt.legend()
+         ax[y].set_title("Clovellu "+str(yearr[y]))
+    plt.show()
 
     
 
@@ -273,7 +268,7 @@ for i in range(0,len(water_temp)):
 #TableDiff(date[1],date[2],bluebottles[1],bluebottles[2])
 
 #PlotTemp()
-#TableMonthBeach()
+TableMonthBeach()
 
 
 

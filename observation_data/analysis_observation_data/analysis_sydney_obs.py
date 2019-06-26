@@ -154,10 +154,23 @@ def nonans(array):
 
 
 def pol2cart(rho, phi):
+    """
+    author : Dr. Schaeffer
+    """
+    
     x = rho * np.cos(phi)
     y = rho * np.sin(phi)
     return(x, y)
-
+    
+def cart2pol(x, y):
+    """
+    author : Dr. Schaeffer
+    """
+    
+    rho = np.sqrt(x**2 + y**2)
+    phi = np.arctan2(y, x)
+    return(rho, phi)
+    
 def GetU(speed,direction):
     wind_dir_deg=(90-direction+180)
     wind_u = - speed * np.sin(np.pi / 180 * wind_dir_deg) 
@@ -243,7 +256,7 @@ def PolarPlot(nb,direction,speed):
     ax.add_artist(legend1)
     ax.add_artist(legend2)
     plt.show()
-    fig.savefig("../outputs_observation_data/sydney_obs/polar_plot_"+str(location[nb])+"_pastday.png",dpi=300)
+    fig.savefig("../outputs_observation_data/sydney_obs/daily_averaged/polar_plot_"+str(location[nb])+"_pastday.png",dpi=300)
 
 def RosePlot(beachnb,bluebnb,date_obs,direction_obs,speed_obs):
     """
@@ -268,10 +281,11 @@ def RosePlot(beachnb,bluebnb,date_obs,direction_obs,speed_obs):
   #  fig=plt.figure()
     plot_windrose(df, kind=kind, normed=True, opening=0.8, edgecolor="white",bins=bins)
     plt.title("Daily averaged wind direction 1 day before at "+str(location[beachnb])+" "+str(blueb[bluebnb]))
+    plt.legend('wind speed (m/s)')
  #   fig2=plt.figure()
   #  plt.hist(wind_direction,bins_new)
     
-    plt.savefig("../outputs_observation_data/sydney_obs/daily_averaged/rose"+str(location[beachnb])+"_"+str(blueb[bluebnb])+".png",dpi=300)
+    plt.savefig("../outputs_observation_data/sydney_obs/daily_averaged/rose"+str(location[beachnb])+"_"+str(blueb[bluebnb])+"_pastday.png",dpi=300)
 
 
 def TimeSeriesPlot():
@@ -314,53 +328,154 @@ gust_speed=gust_speed[450500:]
 u_obs=GetU(speed_obs,direction_obs)
 v_obs=GetV(speed_obs,direction_obs)
 
-def average_angles(angles):
+def ToOceano(meteo_direction):
+    oceano_direction=np.zeros(len(meteo_direction))
+    for i in range(0,len(meteo_direction)):
+        if meteo_direction[i]<=270:
+            oceano_direction[i]=270-meteo_direction[i]
+        else:
+           oceano_direction[i]=360+270-meteo_direction[i]
+    return oceano_direction
+
+def ToMeteo(oceano_direction):
+    meteo_direction=np.zeros(len(oceano_direction))
+    for i in range(0,len(oceano_direction)):
+        if oceano_direction[i]<=270:
+            meteo_direction[i]=270-oceano_direction[i]
+        else:
+            meteo_direction[i]=360+270-oceano_direction[i]
+    return meteo_direction
+
+def ToNormal(from_u_direction):
     """
-    @author : Christian Aichinger 
-    Average (mean) of angles
+    from -180;+180 to 0;360
+    """
     
-    Return the average of an input sequence of angles. The result is between
-    ``0`` and ``2 * math.pi``.
-    If the average is not defined (e.g. ``average_angles([0, math.pi]))``,
-    a ``ValueError`` is raised.
-    """
+    normal_direction=np.zeros(len(from_u_direction))
+    for i in range(0,len(from_u_direction)):
+        if from_u_direction[i]<0:
+            normal_direction[i]=360+from_u_direction[i]
+        else:
+            normal_direction[i]=from_u_direction[i]
+    return normal_direction
 
-    x = sum(math.cos(a) for a in angles)
-    y = sum(math.sin(a) for a in angles)
+"""
+day from midnight to 9
+"""
+time_obs=time_obs-0.375
 
-    if x == 0 and y == 0:
-        raise ValueError(
-            "The angle average of the inputs is undefined: %r" % angles)
-
-    # To get outputs from -pi to +pi, delete everything but math.atan2() here.
-    return math.fmod(math.atan2(y, x) + 2 * math.pi, 2 * math.pi)
-
+direction_obs_new=ToOceano(direction_obs)
+u_all, v_all = pol2cart(speed_obs,direction_obs_new*np.pi/180) #seem correct
 t=[]
 for i in range(len(time_obs)):
     t.append(time_obs[i].astype('int')) #list of days in time format
 t=list(dict.fromkeys(t[:])) #remove repetition
-wind_direction_daily = np.zeros((len(t)))
-wind_speed_daily = np.zeros((len(t)))
+u_daily = np.zeros((len(t)))
+v_daily = np.zeros((len(t)))
 LENN = np.zeros((len(t)))
+
 time_new=[]
-direction_obs_rad=direction_obs*np.pi/180
 for i in range (len(time_obs)):
     time_new.append(int(time_obs[i]))
+
 for i in range(len(t)):
     tt0 = np.where(time_new==t[i]) #find all items from the same day
-    LENN[i] = sum(np.isfinite(direction_obs[tt0]))
+    LENN[i] = sum(np.isfinite(u_all[tt0]))
     if LENN[i]>0:
-        wind_direction_daily[i] = average_angles(nonans(direction_obs_rad[tt0])) #daily mean of wind direction
-        wind_speed_daily[i] = np.mean(nonans(speed_obs[tt0])) #daily mean of wind speed
-wind_direction_daily=wind_direction_daily*180/np.pi
-u_daily=GetU(wind_speed_daily, wind_direction_daily)
-v_daily=GetV(wind_speed_daily, wind_direction_daily)
+        u_daily[i] = np.mean(nonans(u_all[tt0])) #daily mean of wind direction
+        v_daily[i] = np.mean(nonans(v_all[tt0])) #daily mean of wind speed
 
+
+wind_speed_daily, direction_daily_o=cart2pol(u_daily,v_daily)
+direction_daily_o=direction_daily_o*180/np.pi #rad to deg
+direction_daily_step=ToNormal(direction_daily_o)
+wind_direction_daily=ToMeteo(direction_daily_step)
 #TimeSeriesPlot()
+
+
+
+
+
+"""
+NE=np.where(np.logical_and(wind_direction_daily>11.25, wind_direction_daily<=101.25))
+SE=np.where(np.logical_and(wind_direction_daily>101.25, wind_direction_daily<=191.25))
+SW=np.where(np.logical_and(wind_direction_daily>191.25, wind_direction_daily<=281.25))
+NW=np.where(np.logical_or(wind_direction_daily>281.25, wind_direction_daily<=11.25))
+
+date=np.asarray(date_obs)
+date=[date[NE],date[SE],date[SW],date[NW]]
+observed_list, none_list = [], []
+for l in range(len(date)):
+    observed=0
+    none=0
+    for i in range(len(date[l])):
+        for j in range(len(date_box[1][2])): #Coogee
+            if date[l][i]==date_box[1][2][j]:
+                observed+=1
+
+    for i in range(len(date[l])):
+        for j in range(len(date_box[1][0])):
+            if date[l][i]==date_box[1][0][j]:
+                none+=1
+    observed_list.append(observed/(observed+none))
+    none_list.append(none/(observed+none))
+
+ind = np.arange(4)
+width=0.2
+plt.xticks(ind, ('NE','SE','SW','NW'))
+ax = plt.subplot(111)
+ax.bar(ind-width/2, none_list, width=width, color='hotpink', align='center',label='None')
+ax.bar(ind+width/2, observed_list, width=width, color='dodgerblue', align='center',label='Observed')
+plt.legend()
+plt.title('Coogee')
+plt.show()
+
+
+date=np.asarray(date_obs)
+date=[date[NE],date[SE],date[SW],date[NW]]
+NE_list, SE_list, SW_list, NW_list =[0,0], [0,0], [0,0], [0,0]
+liste=[NE_list, SE_list, SW_list, NW_list]
+sum_none=0.
+sum_observed=0.
+for l in range(len(date)):
+    observed=0
+    none=0
+    for i in range(len(date[l])):
+        for j in range(len(date_box[1][2])): #Coogee
+            if date[l][i]==date_box[1][2][j]:
+                observed+=1
+
+    for i in range(len(date[l])):
+        for j in range(len(date_box[1][0])):
+            if date[l][i]==date_box[1][0][j]:
+                none+=1
+    liste[l][0]=none
+    liste[l][1]=observed
+    sum_none+=none
+    sum_observed+=observed
+for l in range(len(date)):
+    liste[l][0]=liste[l][0]/sum_none
+    liste[l][1]=liste[l][1]/sum_observed
+
+
+xbar=np.arange(2)
+ax = plt.subplot(111)
+plt.xticks(xbar, ('None', 'Some'))
+ax.bar(xbar-3*width/2, liste[0], width=0.2, color='black', align='center',label='NE')
+ax.bar(xbar-width/2, liste[1], width=0.2, color='red', align='center',label='SE')
+ax.bar(xbar+width/2, liste[2], width=0.2, color='green', align='center',label='SW')
+ax.bar(xbar+3*width/2, liste[3], width=0.2, color='blue', align='center',label='NW')
+plt.legend()
+plt.title('Coogee')
+plt.show()
+
+
+
+TimeSeriesPlot()
 BoxPlot(0,date_obs,wind_direction_daily)
 BoxPlot(1,date_obs,wind_direction_daily)
 BoxPlot(2,date_obs,wind_direction_daily)
-"""
+
 PolarPlot(0, wind_direction_daily, wind_speed_daily)
 PolarPlot(1, wind_direction_daily, wind_speed_daily)
 PolarPlot(2, wind_direction_daily, wind_speed_daily)
