@@ -75,7 +75,7 @@ def BoxPlot(nb,date_plot,BOMdaily):
     plt.ylabel('Wind direction (degrees)')
     plt.boxplot(x,whis=[5,95])
     plt.xticks([1,2,3],['None','Likely','Some'])
-    fig.savefig("../outputs_observation_data/sydney_obs/box_plots/oneday_"+str(location[nb])+".png",dpi=300)
+   # fig.savefig("../outputs_observation_data/sydney_obs/box_plots/oneday_"+str(location[nb])+".png",dpi=300)
     
 def GetVariables(filename):
     """
@@ -256,7 +256,7 @@ def PolarPlot(nb,direction,speed):
     ax.add_artist(legend1)
     ax.add_artist(legend2)
     plt.show()
-    fig.savefig("../outputs_observation_data/sydney_obs/daily_averaged/polar_plot_"+str(location[nb])+"_pastday.png",dpi=300)
+  #  fig.savefig("../outputs_observation_data/sydney_obs/daily_averaged/polar_plot_"+str(location[nb])+"_pastday.png",dpi=300)
 
 def RosePlot(beachnb,bluebnb,date_obs,direction_obs,speed_obs):
     """
@@ -285,7 +285,7 @@ def RosePlot(beachnb,bluebnb,date_obs,direction_obs,speed_obs):
  #   fig2=plt.figure()
   #  plt.hist(wind_direction,bins_new)
     
-    plt.savefig("../outputs_observation_data/sydney_obs/daily_averaged/rose"+str(location[beachnb])+"_"+str(blueb[bluebnb])+"_pastday.png",dpi=300)
+  #  plt.savefig("../outputs_observation_data/sydney_obs/daily_averaged/rose"+str(location[beachnb])+"_"+str(blueb[bluebnb])+"_pastday.png",dpi=300)
 
 
 def TimeSeriesPlot():
@@ -311,19 +311,19 @@ def TimeSeriesPlot():
     plt.plot(date_obs,v_daily)
     plt.ylabel('daily averaged V')
     plt.show()
-    fig.savefig("../outputs_observation_data/sydney_obs/timeseries_5.png",dpi=300)
+  #  fig.savefig("../outputs_observation_data/sydney_obs/timeseries_5.png",dpi=300)
 
 
-file_name = '../raw_observation_data/wind_kurnell_sydney_observatory/wind_66037_local_time.csv'
+file_name = '../raw_observation_data/wind_kurnell_sydney_observatory/wind_66043_local_time.csv'
 filename=pd.read_csv(file_name)
 df = filename.apply(pd.to_numeric, args=('coerce',)) # inserts NaNs where empty cell!!! grrrr
 date_obs_full, time_obs, speed_obs, direction_obs, gust_speed=GetData(df)
-date_obs_full=date_obs_full[450500:] #take data from 2017
+date_obs_full=date_obs_full[276838:] #take data from 2016
 date_obs=list(dict.fromkeys(date_obs_full)) #remove repetition 
-time_obs=time_obs[450500:]
-speed_obs=speed_obs[450500:]
-direction_obs=direction_obs[450500:]
-gust_speed=gust_speed[450500:]
+time_obs=time_obs[276838:]
+speed_obs=speed_obs[276838:]
+direction_obs=direction_obs[276838:]
+gust_speed=gust_speed[276838:]#[450500:] = forsydney obs
 
 u_obs=GetU(speed_obs,direction_obs)
 v_obs=GetV(speed_obs,direction_obs)
@@ -369,7 +369,8 @@ u_all, v_all = pol2cart(speed_obs,direction_obs_new*np.pi/180) #seem correct
 t=[]
 for i in range(len(time_obs)):
     t.append(time_obs[i].astype('int')) #list of days in time format
-t=list(dict.fromkeys(t[:])) #remove repetition
+t=list(dict.fromkeys(t[:]))#remove repetition
+t=t[:-1] #remove last day bc not in date_obs
 u_daily = np.zeros((len(t)))
 v_daily = np.zeros((len(t)))
 LENN = np.zeros((len(t)))

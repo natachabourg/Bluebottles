@@ -156,7 +156,7 @@ def PlotTemp():
                     fontsize=8)
     
         plt.show()
-        fig.savefig("../outputs_observation_data/plot_temp"+str(location[i])+".png",dpi=300)
+       # fig.savefig("../outputs_observation_data/plot_temp"+str(location[i])+".png",dpi=300)
 
 
 def TableMonthBeach():
@@ -175,6 +175,8 @@ def TableMonthBeach():
     monthh=[1,2,3,4,5,6,7,8,9,10,11,12]
     f, (ax1, ax2, ax3, ax4) = plt.subplots(4, sharey=True, sharex=True)
     ax=[ax1, ax2, ax3, ax4]
+    xbar=np.arange(0,12)
+    width=0.2
     plt.xticks(xbar, ('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'))
     for y in range(len(yearr)):
         for i in range(len(date)):
@@ -196,12 +198,11 @@ def TableMonthBeach():
                             percentage_none_month[i][m]=np.divide(100.*none_month[i][m],observed_month[i][m]+likely_month[i][m]+none_month[i][m])
             month_beach=Table([month,observed_month[i][:12],likely_month[i][:12],none_month[i][:12], percentage_none_month[i][:12]],names=('Month','Observed','Likely','Noone','% of None'))
             ascii.write(month_beach, '../outputs_observation_data/monthly_bluebottles_'+str(yearr[y])+'_'+location[i]+'.csv', format='csv', fast_writer=False, overwrite=True)  
-        xbar=np.arange(0,12)
         ax[y].set_ylabel('# observations')
-         ax[y].bar(xbar-width/2, observed_month[0], width=0.2, color='dodgerblue', align='center',label='observed')
-         ax[y].bar(xbar+width/2, none_month[0], width=0.2, color='hotpink', align='center',label='none')
-         plt.legend()
-         ax[y].set_title("Clovellu "+str(yearr[y]))
+        ax[y].bar(xbar-width/2, observed_month[0], width=0.2, color='dodgerblue', align='center',label='observed')
+        ax[y].bar(xbar+width/2, none_month[0], width=0.2, color='hotpink', align='center',label='none')
+        plt.legend()
+        ax[y].set_title("Clovellu "+str(yearr[y]))
     plt.show()
 
     
@@ -267,8 +268,8 @@ for i in range(0,len(water_temp)):
 #TableDiff(date[0],date[2],bluebottles[0],bluebottles[2])
 #TableDiff(date[1],date[2],bluebottles[1],bluebottles[2])
 
-#PlotTemp()
-TableMonthBeach()
+PlotTemp()
+#TableMonthBeach()
 
 
 
