@@ -285,7 +285,7 @@ def RosePlot(beachnb,bluebnb,date_obs,direction_obs,speed_obs):
  #   fig2=plt.figure()
   #  plt.hist(wind_direction,bins_new)
     
-  #  plt.savefig("../outputs_observation_data/sydney_obs/daily_averaged/rose"+str(location[beachnb])+"_"+str(blueb[bluebnb])+"_pastday.png",dpi=300)
+    plt.savefig("../outputs_observation_data/sydney_obs/daily_averaged/rose"+str(location[beachnb])+"_"+str(blueb[bluebnb])+"_pastday.png",dpi=300)
 
 
 def TimeSeriesPlot():
@@ -312,7 +312,6 @@ def TimeSeriesPlot():
     plt.ylabel('daily averaged V')
     plt.show()
   #  fig.savefig("../outputs_observation_data/sydney_obs/timeseries_5.png",dpi=300)
-
 
 file_name = '../raw_observation_data/wind_kurnell_sydney_observatory/wind_66043_local_time.csv'
 filename=pd.read_csv(file_name)
@@ -392,10 +391,6 @@ direction_daily_o=direction_daily_o*180/np.pi #rad to deg
 direction_daily_step=ToNormal(direction_daily_o)
 wind_direction_daily=ToMeteo(direction_daily_step)
 #TimeSeriesPlot()
-
-
-
-
 
 """
 NE=np.where(np.logical_and(wind_direction_daily>11.25, wind_direction_daily<=101.25))

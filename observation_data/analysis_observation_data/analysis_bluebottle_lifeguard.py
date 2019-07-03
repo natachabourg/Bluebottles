@@ -118,7 +118,7 @@ def TableDiff(date1,date2,file1,file2):
     t=Table([date,first_beach,second_beach], names=('date',first,second))
     total=equal+diff
     t.add_row((0, equal, total))
-    ascii.write(t, '../outputs_observation_data/diff'+first+second+'.csv', format='csv', fast_writer=False, overwrite=True)  
+#    ascii.write(t, '../outputs_observation_data/diff'+first+second+'.csv', format='csv', fast_writer=False, overwrite=True)  
 
 def PlotTemp():
     """
@@ -134,11 +134,11 @@ def PlotTemp():
         fig=plt.figure(figsize=(12,9))
         for j in range(len(bluebottles[i])):
             if bluebottles[i][j]==1:
-                somemany=plt.scatter(date[i][j], water_temp[i][j], color='dodgerblue',s=12)
-            elif bluebottles[i][j]==0.5:
-                likely=plt.scatter(date[i][j], water_temp[i][j], color='lightskyblue',s=12)
+                somemany=plt.scatter(date[i][j], water_temp[i][j], color='dodgerblue',s=14,marker='o')
+     #       elif bluebottles[i][j]==0.5:
+     #           likely=plt.scatter(date[i][j], water_temp[i][j], color='lightskyblue',s=12,alpha=0, marker='o')
             else:
-                none=plt.scatter(date[i][j], water_temp[i][j], color='hotpink',alpha=0.2, marker='+',s=10)
+                none=plt.scatter(date[i][j], water_temp[i][j], color='lightgrey', marker='o',s=14,alpha=0.3)
         ax=plt.axes()
         ax.xaxis.set_major_locator(years)
         ax.xaxis.set_major_formatter(years_fmt)
@@ -148,8 +148,8 @@ def PlotTemp():
         fig.autofmt_xdate()
         plt.ylabel('Water temperature (celsius)')
         plt.title('Bluebottles at '+str(location[i])+' beach')
-        plt.legend((somemany, likely, none),
-                    ('observed','likely','none'),
+        plt.legend((somemany,  none),#likely,
+                    ('observed','none'),# 'likely',
                     scatterpoints=1,
                     loc='upper left',
                     ncol=3,
@@ -197,7 +197,7 @@ def TableMonthBeach():
                                 none_month[i][m]+=1
                             percentage_none_month[i][m]=np.divide(100.*none_month[i][m],observed_month[i][m]+likely_month[i][m]+none_month[i][m])
             month_beach=Table([month,observed_month[i][:12],likely_month[i][:12],none_month[i][:12], percentage_none_month[i][:12]],names=('Month','Observed','Likely','Noone','% of None'))
-            ascii.write(month_beach, '../outputs_observation_data/monthly_bluebottles_'+str(yearr[y])+'_'+location[i]+'.csv', format='csv', fast_writer=False, overwrite=True)  
+          #  ascii.write(month_beach, '../outputs_observation_data/monthly_bluebottles_'+str(yearr[y])+'_'+location[i]+'.csv', format='csv', fast_writer=False, overwrite=True)  
         ax[y].set_ylabel('# observations')
         ax[y].bar(xbar-width/2, observed_month[0], width=0.2, color='dodgerblue', align='center',label='observed')
         ax[y].bar(xbar+width/2, none_month[0], width=0.2, color='hotpink', align='center',label='none')
@@ -394,39 +394,17 @@ def WindDirectionTime(nb, date_plot, BOMdaily):
                 ncol=3,
                 fontsize=8)
     plt.show()
-    fig.savefig("../outputs_observation_data/gust_direction_past_"+str(location[nb])+".png",dpi=300)
+  #  fig.savefig("../outputs_observation_data/gust_direction_past_"+str(location[nb])+".png",dpi=300)
 
 
 file_name = '../raw_observation_data/bom_port_kembla/all_IDO.csv'
 f=pd.read_csv(file_name)
 
-BOMtime, BOMdate, BOMwater_temp, BOMwind_direction, BOMwind_speed = GetBOMVariables(f)
-BOMdaily,date_plot=DailyAverage()
+#BOMtime, BOMdate, BOMwater_temp, BOMwind_direction, BOMwind_speed = GetBOMVariables(f)
+#BOMdaily,date_plot=DailyAverage()
 
 #plt.hist(x,bins=30)
 #plt.ylabel('proba')
-
-"""
-Kurnell data 
-
-wind_direction[i]=file.Wind_direction_00[i]+file.Wind_direction_03[i]+file.Wind_direction_06[i]+file.Wind_direction_09[i]+float(file.Wind_direction_12[i])+float(file.Wind_direction_15[i])+float(file.Wind_direction_18[i])+float(file.Wind_direction_21[i])
-daily_direction[i]=(wind_direction[i])/8
-wind_speed[i]=file.Wind_speed_00[i]+file.Wind_speed_03[i]+file.Wind_speed_06[i]+file.Wind_speed_09[i]+float(file.Wind_speed_12[i])+float(file.Wind_speed_15[i])+float(file.Wind_speed_18[i])+float(file.Wind_speed_21[i])
-daily_speed[i]=(wind_speed[i])/8 #in m/s
-wind_u[i]=1/8*(GetU(file.Wind_speed_00[i],file.Wind_direction_00[i])+GetU(file.Wind_speed_03[i],file.Wind_direction_03[i])+GetU(file.Wind_speed_06[i],file.Wind_direction_06[i])+GetU(file.Wind_speed_09[i],file.Wind_direction_09[i])+GetU(file.Wind_speed_12[i],file.Wind_direction_12[i])+GetU(file.Wind_speed_15[i],file.Wind_direction_15[i])+GetU(file.Wind_speed_18[i],file.Wind_direction_18[i])+GetU(file.Wind_speed_21[i],file.Wind_direction_21[i]))
-wind_v[i]=1/8*(GetV(file.Wind_speed_00[i],file.Wind_direction_00[i])+GetV(file.Wind_speed_03[i],file.Wind_direction_03[i])+GetV(file.Wind_speed_06[i],file.Wind_direction_06[i])+GetV(file.Wind_speed_09[i],file.Wind_direction_09[i])+GetV(file.Wind_speed_12[i],file.Wind_direction_12[i])+GetV(file.Wind_speed_15[i],file.Wind_direction_15[i])+GetV(file.Wind_speed_18[i],file.Wind_direction_18[i])+GetV(file.Wind_speed_21[i],file.Wind_direction_21[i]))
-max_speed[i]=file.max_speed[i]
-max_direction[i]=file.max_direction[i]
-
-    wind_u=np.zeros(len(file))
-    wind_v=np.zeros(len(file))
-    max_speed=np.zeros(len(file))
-    max_direction=np.zeros(len(file))
-    wind_direction=np.zeros(len(file))
-    wind_speed=np.zeros(len(file))
-    daily_direction=np.zeros(len(file))
-    daily_speed=np.zeros(len(file))
-"""
 
 
 
@@ -498,7 +476,7 @@ def PolarPlot(nb,direction):
     ax.set_theta_zero_location('W', offset=10)
     plt.title("Daily averaged wind direction (day before) at "+str(location[nb]))
     plt.show()
-    fig.savefig("../outputs_observation_data/with_BOMdata/polar_plot_"+str(location[nb])+".png",dpi=300)
+   # fig.savefig("../outputs_observation_data/with_BOMdata/polar_plot_"+str(location[nb])+".png",dpi=300)
 
 #file_name_kurnell = '../raw_observation_data/wind_kurnell_sydney_observatory/Kurnell_Data.csv'
 #file=pd.read_csv(file_name_kurnell)
@@ -533,8 +511,8 @@ def UVplot():
 #for i in range(len(beach)):
  #   WindDirectionTime(i,date_kurnell,max_direction)
     
-for i in range(3):
-    PolarPlot(i,BOMdaily)
+#for i in range(3):
+ #   PolarPlot(i,BOMdaily)
 
 #UVplot()
     
