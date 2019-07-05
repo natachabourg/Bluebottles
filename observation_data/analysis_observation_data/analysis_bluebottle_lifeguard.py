@@ -134,29 +134,33 @@ def PlotTemp():
         fig=plt.figure(figsize=(12,9))
         for j in range(len(bluebottles[i])):
             if bluebottles[i][j]==1:
-                somemany=plt.scatter(date[i][j], water_temp[i][j], color='dodgerblue',s=14,marker='o')
+                somemany=plt.scatter(date[i][j], water_temp[i][j], color='dodgerblue',s=16,marker='o')
      #       elif bluebottles[i][j]==0.5:
      #           likely=plt.scatter(date[i][j], water_temp[i][j], color='lightskyblue',s=12,alpha=0, marker='o')
             else:
-                none=plt.scatter(date[i][j], water_temp[i][j], color='lightgrey', marker='o',s=14,alpha=0.3)
+                none=plt.scatter(date[i][j], water_temp[i][j], color='lightgrey', marker='o',s=16,alpha=0.3)
         ax=plt.axes()
         ax.xaxis.set_major_locator(years)
         ax.xaxis.set_major_formatter(years_fmt)
         ax.xaxis.set_minor_locator(months)
         ax.xaxis.set_minor_formatter(month_fmt)
+        ax.tick_params(labelsize=12)
 
         fig.autofmt_xdate()
-        plt.ylabel('Water temperature (celsius)')
-        plt.title('Bluebottles at '+str(location[i])+' beach')
+        plt.ylabel('Water temperature (celsius)', fontsize=16)
+        plt.axvline(x=datetime.date(2017,6,1))
+        plt.axvline(x=datetime.date(2017,9,1))
+        plt.axvline(x=datetime.date(2018,6,1))
+        plt.axvline(x=datetime.date(2018,9,1))
+        plt.title('Bluebottles observations : '+str(location[i]), fontsize=16)
         plt.legend((somemany,  none),#likely,
                     ('observed','none'),# 'likely',
                     scatterpoints=1,
                     loc='upper left',
                     ncol=3,
-                    fontsize=8)
-    
+                    fontsize=16)
         plt.show()
-       # fig.savefig("../outputs_observation_data/plot_temp"+str(location[i])+".png",dpi=300)
+        fig.savefig("../../writing/plot_temp"+str(location[i])+".png",dpi=300)
 
 
 def TableMonthBeach():
@@ -246,6 +250,7 @@ def PlotHist():
     ax.bar(month-0.2,obbs,width=0.2,color='lightskyblue',align='center',label='observed')
     ax.bar(month,liik,width=0.2,color='lightpink',align='center',label='likely')
     ax.bar(month+0.2,noon,width=0.2,color='grey',align='center',label='none')
+    
     plt.legend()
 
 files_name = glob.glob('../raw_observation_data/bluebottle_lifeguard_reports/*2.xlsx') #0Clovelly 1Coogee 2Maroubra
@@ -397,8 +402,8 @@ def WindDirectionTime(nb, date_plot, BOMdaily):
   #  fig.savefig("../outputs_observation_data/gust_direction_past_"+str(location[nb])+".png",dpi=300)
 
 
-file_name = '../raw_observation_data/bom_port_kembla/all_IDO.csv'
-f=pd.read_csv(file_name)
+#file_name = '../raw_observation_data/bom_port_kembla/all_IDO.csv'
+#f=pd.read_csv(file_name)
 
 #BOMtime, BOMdate, BOMwater_temp, BOMwind_direction, BOMwind_speed = GetBOMVariables(f)
 #BOMdaily,date_plot=DailyAverage()

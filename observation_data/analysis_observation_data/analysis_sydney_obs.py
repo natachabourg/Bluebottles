@@ -392,7 +392,139 @@ direction_daily_step=ToNormal(direction_daily_o)
 wind_direction_daily=ToMeteo(direction_daily_step)
 #TimeSeriesPlot()
 
+""""
+Histogram plots for each season
+
 """
+
+    
+date_obs_array=np.asarray(date_obs)
+summer=[d for d in date_obs if d.month == 12 or d.month == 1 or d.month == 2]
+autumn=[d for d in date_obs if d.month == 3 or d.month == 4 or d.month == 5]
+winter=[d for d in date_obs if d.month == 6 or d.month == 7 or d.month == 8]
+spring=[d for d in date_obs if d.month == 9 or d.month == 10 or d.month == 11]
+location=['Clovelly','Coogee','Maroubra']
+    
+both_summer=set(date_obs_array).intersection(summer)
+index_summer = [date_obs.index(x) for x in both_summer]
+direction_daily_summer=wind_direction_daily[index_summer]
+    
+both_autumn=set(date_obs_array).intersection(autumn)
+index_autumn = [date_obs.index(x) for x in both_autumn]
+direction_daily_autumn=wind_direction_daily[index_autumn]
+    
+both_winter=set(date_obs_array).intersection(winter)
+index_winter = [date_obs.index(x) for x in both_winter]
+direction_daily_winter=wind_direction_daily[index_winter]
+    
+both_spring=set(date_obs_array).intersection(spring)
+index_spring = [date_obs.index(x) for x in both_spring]
+direction_daily_spring=wind_direction_daily[index_spring]
+
+direction_season=[direction_daily_spring,direction_daily_summer,direction_daily_autumn,direction_daily_winter]
+index_season=[index_spring,index_summer,index_autumn,index_winter]
+
+def ColorHist(nb,seas):
+    direction_daily=direction_season[seas]
+    index=index_season[seas]
+    
+    date_obs_new=date_obs_array[index]
+    
+    NE=np.where(np.logical_and(direction_daily>11.25, direction_daily<=101.25))
+    SE=np.where(np.logical_and(direction_daily>101.25, direction_daily<=191.25))
+    SW=np.where(np.logical_and(direction_daily>191.25, direction_daily<=281.25))
+    NW=np.where(np.logical_or(direction_daily>281.25, direction_daily<=11.25))    
+
+    season=['spring', 'summer', 'autumn', 'winter']
+    
+    date=np.asarray(date_obs_new)
+    date=[date[NE],date[SE],date[SW],date[NW]]
+    observed_list, none_list = [], []
+    for l in range(len(date)):
+        observed=0
+        none=0
+        for i in range(len(date[l])):
+            for j in range(len(date_box[nb][2])): #Coogee
+                if date[l][i]==date_box[nb][2][j]:
+                    observed+=1
+    
+        for i in range(len(date[l])):
+            for j in range(len(date_box[nb][0])):
+                if date[l][i]==date_box[nb][0][j]:
+                    none+=1
+        observed_list.append(observed/(observed+none))
+        none_list.append(none/(observed+none))
+    
+    ind = np.arange(4)
+    width=0.2
+    plt.xticks(ind, ('NE','SE','SW','NW'))
+    fig=plt.figure()
+    ax = fig.add_subplot(111)
+    ax.bar(ind-width/2, none_list, width=width, color='lightgrey', align='center',label='None')
+    ax.bar(ind+width/2, observed_list, width=width, color='dodgerblue', align='center',label='Observed')
+    plt.legend()
+    plt.title(location[nb])
+    plt.show()
+    fig.savefig('../outputs_observation_data/kurnell/histograms_observation/seasonal_histograms/direction_'+str(location[nb])+'_autumn.png',dpi=300)
+ 
+
+def Sth(nb,seas):
+    direction_daily=direction_season[seas]
+    index=index_season[seas]
+    
+    date_obs_new=date_obs_array[index]
+    
+    NE=np.where(np.logical_and(direction_daily>11.25, direction_daily<=101.25))
+    SE=np.where(np.logical_and(direction_daily>101.25, direction_daily<=191.25))
+    SW=np.where(np.logical_and(direction_daily>191.25, direction_daily<=281.25))
+    NW=np.where(np.logical_or(direction_daily>281.25, direction_daily<=11.25))    
+
+    season=['spring', 'summer', 'autumn', 'winter']
+    
+    date=np.asarray(date_obs_new)
+    date=[date[NE],date[SE],date[SW],date[NW]]
+    NE_list, SE_list, SW_list, NW_list =[0,0], [0,0], [0,0], [0,0]
+    liste=[NE_list, SE_list, SW_list, NW_list]
+    sum_none=0.
+    sum_observed=0.
+    for l in range(len(date)):
+        observed=0
+        none=0
+        for i in range(len(date[l])):
+            for j in range(len(date_box[nb][2])): #nb
+                if date[l][i]+datetime.timedelta(days=1)==date_box[nb][2][j]:
+                    observed+=1
+    
+        for i in range(len(date[l])):
+            for j in range(len(date_box[nb][0])):
+                if date[l][i]+datetime.timedelta(days=1)==date_box[nb][0][j]:
+                    none+=1
+        liste[l][0]=none
+        liste[l][1]=observed
+        sum_none+=none
+        sum_observed+=observed
+    for l in range(len(date)):
+        liste[l][0]=liste[l][0]/sum_none
+        liste[l][1]=liste[l][1]/sum_observed
+    
+    
+    xbar=np.arange(2)
+    width=0.2
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    plt.xticks(xbar, ('None', 'Some'))
+    ax.bar(xbar-3*width/2, liste[0], width=0.2, color='olivedrab', align='center',label='NE')
+    ax.bar(xbar-width/2, liste[1], width=0.2, color='skyblue', align='center',label='SE')
+    ax.bar(xbar+width/2, liste[2], width=0.2, color='plum', align='center',label='SW')
+    ax.bar(xbar+3*width/2, liste[3], width=0.2, color='orange', align='center',label='NW')
+    plt.legend()
+    plt.title(location[nb]+' '+str(season[seas]))
+    plt.show()
+    fig.savefig('../outputs_observation_data/kurnell/histograms_observation/seasonal_histograms/situation_'+str(location[nb])+'_'+str(season[seas])+'.png',dpi=300)
+
+    
+"""
+
 NE=np.where(np.logical_and(wind_direction_daily>11.25, wind_direction_daily<=101.25))
 SE=np.where(np.logical_and(wind_direction_daily>101.25, wind_direction_daily<=191.25))
 SW=np.where(np.logical_and(wind_direction_daily>191.25, wind_direction_daily<=281.25))
@@ -457,10 +589,10 @@ for l in range(len(date)):
 xbar=np.arange(2)
 ax = plt.subplot(111)
 plt.xticks(xbar, ('None', 'Some'))
-ax.bar(xbar-3*width/2, liste[0], width=0.2, color='black', align='center',label='NE')
-ax.bar(xbar-width/2, liste[1], width=0.2, color='red', align='center',label='SE')
-ax.bar(xbar+width/2, liste[2], width=0.2, color='green', align='center',label='SW')
-ax.bar(xbar+3*width/2, liste[3], width=0.2, color='blue', align='center',label='NW')
+ax.bar(xbar-3*width/2, liste[0], width=0.2, color='olivedrab', align='center',label='NE')
+ax.bar(xbar-width/2, liste[1], width=0.2, color='skyblue', align='center',label='SE')
+ax.bar(xbar+width/2, liste[2], width=0.2, color='plum', align='center',label='SW')
+ax.bar(xbar+3*width/2, liste[3], width=0.2, color='orange', align='center',label='NW')
 plt.legend()
 plt.title('Coogee')
 plt.show()
