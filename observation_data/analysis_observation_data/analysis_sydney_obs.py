@@ -386,6 +386,21 @@ direction_daily_step=ToNormal(direction_daily_o)
 wind_direction_daily=ToMeteo(direction_daily_step)
 #TimeSeriesPlot()
 
+
+def GetMonthIndex(monthnb, beachnb):
+    """
+    return the index of the month nbmonth(1,..,12) in a date dataset
+    """
+    index = [date[beachnb].index(d) for d in date[beachnb] if d.month==monthnb]
+    
+    blueb_month = np.asarray(bluebottles[beachnb])[index]
+    
+    none = [b for b in blueb_month if b==0]
+    likely = [b for b in blueb_month if b==0.5] 
+    observed = [b for b in blueb_month if b==1] 
+    print(str(beachnb)+"  "+str(monthnb)+"None : "+str(len(none))+", Likely : "+str(len(likely))+", Observed : "+str(len(observed)))
+
+
 """"
 Histogram plots for each season
 
