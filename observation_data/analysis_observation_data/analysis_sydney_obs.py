@@ -181,33 +181,27 @@ def GetV(speed,direction):
     wind_v = - speed * np.cos(np.pi / 180 * wind_dir_deg)
     return wind_v
 
+
 def GetData(file):
-    day=np.zeros(len(file))
-    month=np.zeros(len(file))
-    year=np.zeros(len(file))
-    hours=np.zeros(len(file))
-    minutes=np.zeros(len(file))
-    time=np.zeros(len(file))
-    direction=np.zeros(len(file))
-    speed=np.zeros(len(file))
-    gust_speed=np.zeros(len(file))
+
     date=[]
+    time =[]
     
-    for i in range(len(file)):
-        minutes[i]=file.MI_local_time[i]
-        hours[i]=file.HH24[i]
-        day[i]=file.DD[i]
-        month[i]=file.MM[i]
-        year[i]=file.YYYY[i]
-        speed[i]=file.Wind_speed_ms[i]
-        direction[i]=file.Wind_direction_degrees[i]
-        gust_speed[i]=file.Windgust_speed_ms[i]
+    minutes=file.MI_local_time
+    hours=file.HH24
+    day=file.DD
+    month=file.MM
+    year=file.YYYY
+    speed=file.Wind_speed_ms
+    direction=file.Wind_direction_degrees
+    gust_speed=file.Windgust_speed_ms
+
 
     for i in range(len(file)):
         date.append(datetime.date(int(year[i]),int(month[i]),int(day[i])))
-        time[i] = date[i].toordinal() + hours[i]/24 + minutes[i]/(24*60)
+        time.append(date[i].toordinal() + hours[i]/24 + minutes[i]/(24*60))
         
-    return date, time, speed, direction, gust_speed
+    return np.asarray(date), np.asarray(time), np.asarray(speed), np.asarray(direction), np.asarray(gust_speed)
 
 
 def PolarPlot(nb,direction,speed):
@@ -361,7 +355,7 @@ def ToNormal(from_u_direction):
 """
 day from midnight to 9
 """
-time_obs=time_obs-0.375
+time_obs=np.asarray(time_obs)-0.375
 
 direction_obs_new=ToOceano(direction_obs)
 u_all, v_all = pol2cart(speed_obs,direction_obs_new*np.pi/180) #seem correct
@@ -395,9 +389,9 @@ wind_direction_daily=ToMeteo(direction_daily_step)
 """"
 Histogram plots for each season
 
-"""
 
-    
+
+
 date_obs_array=np.asarray(date_obs)
 summer=[d for d in date_obs if d.month == 12 or d.month == 1 or d.month == 2]
 autumn=[d for d in date_obs if d.month == 3 or d.month == 4 or d.month == 5]
@@ -457,15 +451,15 @@ def ColorHist(nb,seas):
     
     ind = np.arange(4)
     width=0.2
-    plt.xticks(ind, ('NE','SE','SW','NW'))
     fig=plt.figure()
     ax = fig.add_subplot(111)
+    plt.xticks(ind, ('NE','SE','SW','NW'))
     ax.bar(ind-width/2, none_list, width=width, color='lightgrey', align='center',label='None')
     ax.bar(ind+width/2, observed_list, width=width, color='dodgerblue', align='center',label='Observed')
     plt.legend()
-    plt.title(location[nb])
+    plt.title(location[nb]+' '+str(season[seas]))
     plt.show()
-    fig.savefig('../outputs_observation_data/kurnell/histograms_observation/seasonal_histograms/direction_'+str(location[nb])+'_autumn.png',dpi=300)
+    fig.savefig('../outputs_observation_data/kurnell/histograms_observation/seasonal_histograms/direction_'+str(location[nb])+'_'+str(season[seas])+'.png',dpi=300)
  
 
 def Sth(nb,seas):
@@ -492,12 +486,12 @@ def Sth(nb,seas):
         none=0
         for i in range(len(date[l])):
             for j in range(len(date_box[nb][2])): #nb
-                if date[l][i]+datetime.timedelta(days=1)==date_box[nb][2][j]:
+                if date[l][i]==date_box[nb][2][j]:
                     observed+=1
     
         for i in range(len(date[l])):
             for j in range(len(date_box[nb][0])):
-                if date[l][i]+datetime.timedelta(days=1)==date_box[nb][0][j]:
+                if date[l][i]==date_box[nb][0][j]:
                     none+=1
         liste[l][0]=none
         liste[l][1]=observed
@@ -521,8 +515,13 @@ def Sth(nb,seas):
     plt.title(location[nb]+' '+str(season[seas]))
     plt.show()
     fig.savefig('../outputs_observation_data/kurnell/histograms_observation/seasonal_histograms/situation_'+str(location[nb])+'_'+str(season[seas])+'.png',dpi=300)
+"""
+""""
+UV data
+"""
 
-    
+file=pd.read_csv('../raw_observation_data/file_adcp_SYD100_2016_2019.csv')
+uv_date=[datetime.datetime.strptime(day, '%Y-%m-%d') for day in file.DATE]
 """
 
 NE=np.where(np.logical_and(wind_direction_daily>11.25, wind_direction_daily<=101.25))
