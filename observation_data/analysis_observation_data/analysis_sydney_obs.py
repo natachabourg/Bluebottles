@@ -355,7 +355,7 @@ def ToNormal(from_u_direction):
 """
 day from midnight to 9
 """
-time_obs=np.asarray(time_obs)-0.375
+#time_obs=np.asarray(time_obs)-0.375
 
 direction_obs_new=ToOceano(direction_obs)
 u_all, v_all = pol2cart(speed_obs,direction_obs_new*np.pi/180) #seem correct
@@ -537,6 +537,11 @@ UV data
 
 file=pd.read_csv('../raw_observation_data/file_adcp_SYD100_2016_2019.csv')
 uv_date=[datetime.datetime.strptime(day, '%Y-%m-%d') for day in file.DATE]
+u_syd=file['UCUR_ROT_int']
+v_syd=file['VCUR_ROT_int']
+
+speed_current, direction_current = cart2pol(u_syd, v_syd)
+
 """
 
 NE=np.where(np.logical_and(wind_direction_daily>11.25, wind_direction_daily<=101.25))
