@@ -81,7 +81,7 @@ def GetVariables(filename):
     """
     Return date, water temp, #of bluebottles of a file
     """
-    date, datee, water_temp, bluebottles, description = [], [], [], [], []
+    date, datee, water_temp, bluebottles, description, wave_height = [], [], [], [], [], []
     for i in range(0,len(filename)):
         day=''
         month=''
@@ -101,15 +101,18 @@ def GetVariables(filename):
             datee.append(time(str(day),str(month),str(year)))
             water_temp.append(filename.Water_temp[i])
             description.append(filename.Description[i])
+            wave_height.append(filename.Wave_height[i])
             if filename.Bluebottles[i]=='none':
                 bluebottles.append(0.)
-            elif filename.Bluebottles[i]=='some' or filename.Bluebottles[i]=='many':
+            elif filename.Bluebottles[i]=='some' or  filename.Bluebottles[i]=='many':
                 bluebottles.append(1.)
+    #        elif filename.Bluebottles[i]=='many':
+    #            bluebottles.append(2.)
             elif filename.Bluebottles[i]=='likely':
                 bluebottles.append(0.5)
 
     middle_date = []
-    final_date, final_water_temp, final_bluebottles, final_description = [], [], [], []
+    final_date, final_water_temp, final_bluebottles, final_description, final_wave_height = [], [], [], [], []
     for l in range(len(datee)):
         middle_date.append(datetime.date(int(datee[l].year), int(datee[l].month), int(datee[l].day)))
     
@@ -117,6 +120,7 @@ def GetVariables(filename):
     final_water_temp.append(water_temp[0])
     final_bluebottles.append(bluebottles[0])
     final_description.append(description[0])
+    final_wave_height.append(wave_height[0])
     
     for l in range(1,len(middle_date)):  
         if middle_date[l]!=middle_date[l-1]: #to only have one value per day
@@ -124,25 +128,68 @@ def GetVariables(filename):
             final_water_temp.append(water_temp[l])
             final_bluebottles.append(bluebottles[l])
             final_description.append(description[l])
+            final_wave_height.append(wave_height[l])
             
     
-    return final_date, final_water_temp, final_bluebottles, final_description
+    return final_date, final_water_temp, final_bluebottles, final_description, final_wave_height
 
 files_name = glob.glob('../raw_observation_data/bluebottle_lifeguard_reports/*2.xlsx') #0Clovelly 1Coogee 2Maroubra
 
 beach=[]
+date_bb=[0,1,2]
 date=[0,1,2]
 water_temp=[0,1,2]
 bluebottles=[0,1,2]
 description=[0,1,2]
+wave_height=[0,1,2]
 date_box=[0,1,2]
 
 for i in range(0,len(files_name)):
     beach.append(pd.read_excel(files_name[i]))
 
 for i in range(0,len(water_temp)):
-    date[i], water_temp[i], bluebottles[i], description[i] = GetVariables(beach[i])
+    date_bb[i], water_temp[i], bluebottles[i], description[i], wave_height[i] = GetVariables(beach[i])
+    
+date[0]=date_bb[0]
+date[1]=date_bb[1][:1036] #delete data before 05/2016
+date[2]=date_bb[2][:1025] #delete data before 05/2016
+
+
+water_temp[1]=water_temp[1][:1036]
+water_temp[2]=water_temp[2][:1025] #delete data before 05/2016
+
+bluebottles[1]=bluebottles[1][:1036]
+bluebottles[2]=bluebottles[2][:1025] 
+
+description[1]=description[1][:1036]
+description[2]=description[2][:1025] 
+
+wave_height[1]=wave_height[1][:1036]
+wave_height[2]=wave_height[2][:1025] 
+
+
+
+
+for i in range(0,len(water_temp)):    
     date_box[i]=[GetDateSomeLikelyNone(i,0.),GetDateSomeLikelyNone(i,0.5),GetDateSomeLikelyNone(i,1.)]
+
+
+for beachnb in (0,1,2):
+    for i in range(len(wave_height[beachnb])):
+        if wave_height[beachnb][i][0]=='b':
+            wave_height[beachnb][i]=0
+        elif wave_height[beachnb][i][1]=='o':
+            wave_height[beachnb][i]=0.5
+        elif wave_height[beachnb][i][-1]=='l':
+            wave_height[beachnb][i]=1
+        elif wave_height[beachnb][i][4]=='p':
+            wave_height[beachnb][i]=1.5
+        elif wave_height[beachnb][i][0]=='t':
+            wave_height[beachnb][i]=2
+        elif wave_height[beachnb][i][1]=='l':
+            wave_height[beachnb][i]=3
+
+
 
 def nonans(array):
     '''
@@ -270,7 +317,6 @@ def RosePlot(beachnb,bluebnb,date_obs,direction_obs,speed_obs):
 
     df = pd.DataFrame({"speed": wind_speed, "direction": wind_direction})
     bins = np.arange(0.01, 24, 4)
-    bins_new=np.arange(-11.25,371.25,22.5)
     kind = "bar"
   #  fig=plt.figure()
     plot_windrose(df, kind=kind, normed=True, opening=0.8, edgecolor="white",bins=bins)
@@ -355,7 +401,7 @@ def ToNormal(from_u_direction):
 """
 day from midnight to 9
 """
-#time_obs=np.asarray(time_obs)-0.375
+time_obs=np.asarray(time_obs)-0.375
 
 direction_obs_new=ToOceano(direction_obs)
 u_all, v_all = pol2cart(speed_obs,direction_obs_new*np.pi/180) #seem correct
@@ -363,7 +409,7 @@ t=[]
 for i in range(len(time_obs)):
     t.append(time_obs[i].astype('int')) #list of days in time format
 t=list(dict.fromkeys(t[:]))#remove repetition
-t=t[:-1] #remove last day bc not in date_obs
+#t=t[:-1] #remove last day bc not in date_obs
 u_daily = np.zeros((len(t)))
 v_daily = np.zeros((len(t)))
 LENN = np.zeros((len(t)))
@@ -405,7 +451,7 @@ def GetMonthIndex(monthnb, beachnb):
 Histogram plots for each season
 
 
-
+"""
 
 date_obs_array=np.asarray(date_obs)
 summer=[d for d in date_obs if d.month == 12 or d.month == 1 or d.month == 2]
@@ -453,7 +499,7 @@ def ColorHist(nb,seas):
         observed=0
         none=0
         for i in range(len(date[l])):
-            for j in range(len(date_box[nb][2])): #Coogee
+            for j in range(len(date_box[nb][2])): 
                 if date[l][i]==date_box[nb][2][j]:
                     observed+=1
     
@@ -530,17 +576,138 @@ def Sth(nb,seas):
     plt.title(location[nb]+' '+str(season[seas]))
     plt.show()
     fig.savefig('../outputs_observation_data/kurnell/histograms_observation/seasonal_histograms/situation_'+str(location[nb])+'_'+str(season[seas])+'.png',dpi=300)
+
+
+def WaveHeightPlot():
+    we=[0,1,2]
+    we_0=[0,1,2]
+    for beachnb in (0,1,2):
+        we[beachnb]=[]
+        we_0[beachnb]=[]
+        for i in range(len(date[beachnb])):
+            for j in range(len(date_box[beachnb][2])):
+                    if (date[beachnb][i])==date_box[beachnb][2][j]:
+                        we[beachnb].append(wave_height[beachnb][i])
+                    if (date[beachnb][i])==date_box[beachnb][0][j]:
+                        we_0[beachnb].append(wave_height[beachnb][i])
+    
+    fig=plt.figure(figsize=(15,7))
+    plt.suptitle('Wave height')
+    plt.subplot(2,2,3)
+    plt.hist(we[0],alpha=0.3,label='obs',normed=True)
+    plt.hist(we_0[0],alpha=0.3,label='none',normed=True)
+    plt.title('Clovelly')
+    plt.grid()
+    plt.legend()
+    plt.subplot(2,2,2)
+    plt.hist(we[1],alpha=0.3,label='obs',normed=True)
+    plt.hist(we_0[1],alpha=0.3,label='none',normed=True)
+    plt.title('Coogee')
+    plt.grid()
+    plt.legend()
+    plt.subplot(2,2,1)
+    plt.hist(we[2],alpha=0.3,label='obs',normed=True)
+    plt.hist(we_0[2],alpha=0.3,label='none',normed=True)
+    plt.title('Maroubra')
+    plt.grid()
+    plt.legend()
+
+def ToRotateShelf(Wind_u, Wind_v):
+    rot_deg_angle = - 25
+    Wind_u_rot = np.cos(rot_deg_angle * np.pi / 180) * Wind_u + np.sin(rot_deg_angle * np.pi / 180) * Wind_v;  #  across-shelf 
+    Wind_v_rot = - np.sin(rot_deg_angle * np.pi / 180) * Wind_u + np.cos(rot_deg_angle * np.pi / 180) * Wind_v;  #  along -shelf 
+    return Wind_u_rot, Wind_v_rot
+
+
+
+
+
+
+
+
+
+
+
+
 """
-""""
+
 UV data
+
+
+file=pd.read_csv('../raw_observation_data/file_adcp_SYD_2016_2019.csv')
+uv_datetime=[datetime.datetime.strptime(day, '%Y-%m-%d') for day in file.DATE]
+u_syd_int=file['UCUR_ROT_int'].values.astype('float')
+v_syd_int=file['VCUR_ROT_int'].values.astype('float')
+u_syd_17=file['UCURrot_17m'].values.astype('float')
+v_syd_17=file['VCURrot_17m'].values.astype('float')
+uv_date=[datetime.date() for datetime in uv_datetime]
+speed_current, direction_current_weird = cart2pol(u_syd_int, v_syd_int)
+direction_current_oceano = ToNormal(direction_current_weird*180/np.pi)
+
+
+#Get the index of observed BB days at maroubra
+index=[]
+for i in range(0,len(uv_date)):
+    if np.any(np.asarray(uv_date[i])==np.asarray(date_box[2][2])):
+        index.append(i)
+
+uv_date_mar_obs=np.asarray(uv_date)[index]
+
+
+
+def PlotHistUV(beachnb):
+    index=[]
+    index0=[]
+    for i in range(0,len(uv_date)):
+        if np.any(np.asarray(uv_date[i])==np.asarray(date_box[beachnb][2])):
+            index.append(i)
+        if np.any(np.asarray(uv_date[i])==np.asarray(date_box[beachnb][0])):
+            index0.append(i)
+
+    bins=np.linspace(-0.15,0.15,40)
+    fig=plt.figure(figsize=(15,7))
+    plt.suptitle(str(location[beachnb]))
+    plt.subplot(2,2,1)
+    plt.hist(u_syd_17[index],alpha=0.3,label='obs',bins=bins,normed=True)
+    plt.hist(u_syd_17[index0],alpha=0.3,label='none',bins=bins,normed=True)
+    plt.title('u ors 17')
+    plt.grid()
+    plt.legend()
+    plt.subplot(2,2,2)
+    plt.hist(u_syd_int[index],alpha=0.3,label='obs',bins=bins,normed=True)
+    plt.hist(u_syd_int[index0],alpha=0.3,label='none',bins=bins,normed=True)
+    plt.title('u ors int')
+    plt.grid()
+    plt.legend()
+    plt.subplot(2,2,3)
+    bins_v=np.linspace(-1,1,40)
+    plt.hist(v_syd_17[index],alpha=0.3,label='obs',bins=bins_v,normed=True)
+    plt.hist(v_syd_17[index0],alpha=0.3,label='none',bins=bins_v,normed=True)
+    plt.title('v ors 17')
+    plt.grid()
+    plt.legend()
+    plt.subplot(2,2,4)
+    plt.hist(v_syd_int[index],alpha=0.3,label='obs',bins=bins_v,normed=True)
+    plt.hist(v_syd_int[index0],alpha=0.3,label='none',bins=bins_v,normed=True)
+    plt.title('v ors int')
+    plt.grid()
+    plt.legend()
+    fig.savefig('u_v_current_hist'+str(location[beachnb])+'.png',dpi=300)
+    
+    
+
+
+def RosePlotCurrent():
+    df = pd.DataFrame({"speed": speed_current, "direction": ToMeteo(direction_current_oceano)})
+    bins = np.arange(0.01, 1, 0.2)
+
+    kind = "bar"
+#  fig=plt.figure()
+    plot_windrose(df, kind=kind, normed=True, opening=0.8, edgecolor="white",bins=bins,blowto=True)
+    plt.title('Daily averaged current SYD100, oceano')
+RosePlotCurrent()
 """
 
-file=pd.read_csv('../raw_observation_data/file_adcp_SYD100_2016_2019.csv')
-uv_date=[datetime.datetime.strptime(day, '%Y-%m-%d') for day in file.DATE]
-u_syd=file['UCUR_ROT_int']
-v_syd=file['VCUR_ROT_int']
-
-speed_current, direction_current = cart2pol(u_syd, v_syd)
 
 """
 
@@ -571,11 +738,12 @@ ind = np.arange(4)
 width=0.2
 plt.xticks(ind, ('NE','SE','SW','NW'))
 ax = plt.subplot(111)
-ax.bar(ind-width/2, none_list, width=width, color='hotpink', align='center',label='None')
+ax.bar(ind-width/2, none_list, width=width, color='lightgrey', align='center',label='None')
 ax.bar(ind+width/2, observed_list, width=width, color='dodgerblue', align='center',label='Observed')
 plt.legend()
 plt.title('Coogee')
 plt.show()
+fig.savefig('../outputs_observation_data/kurnell/histograms_observation/direction_coogee.png',dpi=300)
 
 
 date=np.asarray(date_obs)
@@ -615,6 +783,7 @@ ax.bar(xbar+3*width/2, liste[3], width=0.2, color='orange', align='center',label
 plt.legend()
 plt.title('Coogee')
 plt.show()
+fig.savefig('../outputs_observation_data/kurnell/histograms_observation/situation_coogee.png',dpi=300)
 
 
 

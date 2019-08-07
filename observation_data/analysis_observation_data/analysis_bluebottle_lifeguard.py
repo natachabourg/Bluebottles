@@ -63,12 +63,12 @@ def GetVariables(filename):
             datee.append(time(str(day),str(month),str(year)))
             water_temp.append(filename.Water_temp[i])
             description.append(filename.Description[i])
-            if filename.Bluebottles[i]=='none':
+            if filename.Bluebottles[i]=='none' or filename.Bluebottles[i]=='likely':
                 bluebottles.append(0.)
-            elif filename.Bluebottles[i]=='some' or filename.Bluebottles[i]=='many':
+            elif filename.Bluebottles[i]=='some':
                 bluebottles.append(1.)
-            elif filename.Bluebottles[i]=='likely':
-                bluebottles.append(0.5)
+            elif filename.Bluebottles[i]=='many':
+                bluebottles.append(2.)
 
     middle_date = []
     final_date, final_water_temp, final_bluebottles, final_description = [], [], [], []
@@ -195,13 +195,15 @@ def TableMonthBeach():
                         if date[i][j].month==monthh[m]:
                             if bluebottles[i][j]==1.:
                                 observed_month[i][m]+=1
+                            elif bluebottles[i][j]==2:
+                                observed_month[i][m]+=2
                             elif bluebottles[i][j]==0.5:
                                 likely_month[i][m]+=1
                             elif bluebottles[i][j]==0.: 
                                 none_month[i][m]+=1
                             percentage_none_month[i][m]=np.divide(100.*none_month[i][m],observed_month[i][m]+likely_month[i][m]+none_month[i][m])
             month_beach=Table([month,observed_month[i][:12],likely_month[i][:12],none_month[i][:12], percentage_none_month[i][:12]],names=('Month','Observed','Likely','Noone','% of None'))
-          #  ascii.write(month_beach, '../outputs_observation_data/monthly_bluebottles_'+str(yearr[y])+'_'+location[i]+'.csv', format='csv', fast_writer=False, overwrite=True)  
+            ascii.write(month_beach, '../outputs_observation_data/new_monthly_bluebottles_'+str(yearr[y])+'_'+location[i]+'.csv', format='csv', fast_writer=False, overwrite=True)  
         ax[y].set_ylabel('# observations')
         ax[y].bar(xbar-width/2, observed_month[0], width=0.2, color='dodgerblue', align='center',label='observed')
         ax[y].bar(xbar+width/2, none_month[0], width=0.2, color='hotpink', align='center',label='none')
@@ -236,11 +238,12 @@ def PlotHist():
     lik=[0 for i in range(12)]
     non=[0 for i in range(12)]
     month=np.arange(12)
+    
     for i in range(len(filesmonthly)):
         f_monthly.append(pd.read_csv(filesmonthly[i]))
         obs[i], lik[i], non[i]=CalcHist(f_monthly[i])
     for i in range(12):
-        obbs[i]=np.mean(obs[:])
+        obbs=np.mean(obs[:])
         liik=np.mean(lik[:])
         noon=np.mean(non[:])
     ax = plt.subplot(111)
@@ -254,8 +257,8 @@ def PlotHist():
     plt.legend()
 
 files_name = glob.glob('../raw_observation_data/bluebottle_lifeguard_reports/*2.xlsx') #0Clovelly 1Coogee 2Maroubra
-
 beach=[]
+date_bb=[0,1,2]
 date=[0,1,2]
 water_temp=[0,1,2]
 bluebottles=[0,1,2]
@@ -266,14 +269,30 @@ for i in range(0,len(files_name)):
     beach.append(pd.read_excel(files_name[i]))
 
 for i in range(0,len(water_temp)):
-    date[i], water_temp[i], bluebottles[i], description[i] = GetVariables(beach[i])
+    date_bb[i], water_temp[i], bluebottles[i], description[i] = GetVariables(beach[i])
+    
+date[0]=date_bb[0]
+date[1]=date_bb[1][:1036] #delete data before 05/2016
+date[2]=date_bb[2][:1025] #delete data before 05/2016
+
+
+water_temp[1]=water_temp[1][:1036]
+water_temp[2]=water_temp[2][:1025] #delete data before 05/2016
+
+bluebottles[1]=bluebottles[1][:1036]
+bluebottles[2]=bluebottles[2][:1025] 
+
+description[1]=description[1][:1036]
+description[2]=description[2][:1025] 
+
+for i in range(0,len(water_temp)):    
     date_box[i]=[GetDateSomeLikelyNone(i,0.),GetDateSomeLikelyNone(i,0.5),GetDateSomeLikelyNone(i,1.)]
 #PlotHist()
 #TableDiff(date[0],date[1],bluebottles[0],bluebottles[1])
 #TableDiff(date[0],date[2],bluebottles[0],bluebottles[2])
 #TableDiff(date[1],date[2],bluebottles[1],bluebottles[2])
 
-PlotTemp()
+#PlotTemp()
 #TableMonthBeach()
 
 
@@ -510,7 +529,167 @@ def UVplot():
     ax1.xaxis.set_minor_locator(months)
     ax1.xaxis.set_minor_formatter(month_fmt)
     plt.show()
+
+
+blueb1_2017, date1_2017 = [], []
+blueb1_2018, date1_2018 = [], []
+for i in range(len(date[1])):
+    if date[1][i].year==2017:
+        blueb1_2017.append(bluebottles[1][i])
+        date1_2017.append(date[1][i])
+    elif date[1][i].year==2018:
+        blueb1_2018.append(bluebottles[1][i])
+        date1_2018.append(date[1][i])
+                
+blueb1_2017=pd.Series(blueb1_2017)
+blueb1_2018=pd.Series(blueb1_2018)
+date1_2017=pd.Series(np.asarray(date1_2017).astype('datetime64'))
+date1_2018=pd.Series(np.asarray(date1_2018).astype('datetime64'))
+        
+      #  blueb1_2018.groupby(date1_2018.dt.week).sum().plot(kind='bar')
+        
+blueb2_2017, date2_2017 = [], []
+blueb2_2018, date2_2018 = [], []
+for i in range(len(date[2])):
+    if date[2][i].year==2017:
+       blueb2_2017.append(bluebottles[2][i])
+       date2_2017.append(date[2][i])
+    elif date[2][i].year==2018:
+       blueb2_2018.append(bluebottles[2][i])
+       date2_2018.append(date[2][i])
+        
+blueb2_2017=pd.Series(blueb2_2017)
+blueb2_2018=pd.Series(blueb2_2018)
+date2_2017=pd.Series(np.asarray(date2_2017).astype('datetime64'))
+date2_2018=pd.Series(np.asarray(date2_2018).astype('datetime64'))
+       
+blueb_2018=(blueb1_2018.groupby(date1_2018.dt.week).sum())+(blueb2_2018.groupby(date2_2018.dt.week).sum())
+blueb_2017=(blueb1_2017.groupby(date1_2017.dt.week).sum())+(blueb2_2017.groupby(date2_2017.dt.week).sum())
+     
+
+blueb_day_2018=(blueb1_2018.groupby(date1_2018.dt.day).sum())+(blueb2_2018.groupby(date2_2018.dt.day).sum())
+blueb_day_2017=(blueb1_2017.groupby(date1_2017.dt.day).sum())+(blueb2_2017.groupby(date2_2017.dt.day).sum())
+ 
+blueb_month_2018=(blueb1_2018.groupby(date1_2018.dt.month).sum())+(blueb2_2018.groupby(date2_2018.dt.month).sum())
+blueb_month_2017=(blueb1_2017.groupby(date1_2017.dt.month).sum())+(blueb2_2017.groupby(date2_2017.dt.month).sum())
+
+def Normalise(data):
+    average = np.mean(data)
+    std=np.std(data)
+    normalized_data = [np.divide((d-average),std) for d in data]
+    return normalized_data
     
+   # plt.figure()
+  #  blueb_2018.plot(kind='bar')
+
+
+import pandas as pd
+import numpy as np 
+import xarray as xr
+import matplotlib.pyplot as plt 
+import glob
+
+filenames18_raw = glob.glob('../../imos_current_data/analysis_imos_current_data/results_beaching/18*_konsole.csv')
+filenames17_raw = glob.glob('../../imos_current_data/analysis_imos_current_data/results_beaching/17*_konsole.csv')
+
+
+filenames18 = [f[71:] for f in filenames18_raw]
+filenames17 = [f[71:] for f in filenames17_raw]
+
+file18 = []
+blueb_weekly18, blueb_monthly18 = [], []
+total_beaching18 = []
+average18, std18 = [], []
+
+file17 = []
+blueb_weekly17, blueb_monthly17 = [], []
+total_beaching17 = []
+average18, std17 = [], []
+filen, filenn = [],[]
+for i in range(len(filenames18_raw)):
+    for j in range(len(filenames17_raw)):
+        if filenames18[i]==filenames17[j]:
+            file18.append(pd.read_csv(filenames18_raw[i]))
+            file17.append(pd.read_csv(filenames17_raw[j]))
+            filen.append(filenames18[i])
+
+for i in range(len(file18)):
+    file18[i]['time']=file18[i]['time'].astype("datetime64")
+    blueb_weekly18.append(file18[i]['time'].groupby(file18[i]["time"].dt.week).count())
+    blueb_monthly18.append(file18[i]['time'].groupby(file18[i]["time"].dt.month).count())
+    total_beaching18.append(np.sum(blueb_weekly18[i]))
+    
+for j in range(len(file17)):
+    file17[j]['time']=file17[j]['time'].astype("datetime64")
+    blueb_weekly17.append(file17[j]['time'].groupby(file17[j]["time"].dt.week).count())
+    blueb_monthly17.append(file17[j]['time'].groupby(file17[j]["time"].dt.month).count())
+    total_beaching17.append(np.sum(blueb_weekly17[j]))
+
+norm_data_17 = [Normalise(blueb_data) for blueb_data in blueb_weekly17]
+norm_data_18 = [Normalise(blueb_data) for blueb_data in blueb_weekly18]
+
+norm_obs_17 = Normalise(blueb_2017)
+norm_obs_18 = Normalise(blueb_2018)
+
+norm_month_data_17 = [Normalise(blueb_data) for blueb_data in blueb_monthly17]
+norm_month_data_18 = [Normalise(blueb_data) for blueb_data in blueb_monthly18]
+
+norm_month_obs_17 = Normalise(blueb_month_2017)
+norm_month_obs_18 = Normalise(blueb_month_2018)
+
+#norm_month_obs = np.hstack((norm_month_obs_17,norm_month_obs_18))
+#norm_obs = np.hstack((norm_obs_17,norm_obs_18))
+#norm_month_data = np.hstack((norm_month_data_17,norm_month_data_18))
+#norm_data = np.hstack((norm_data_17,norm_data_18))
+#filenames = np.hstack((filenames17,filenames18))
+#total_beaching = np.hstack((total_beaching17,total_beaching18))
+
+def Difference(obs,sim):
+    diff=0.
+    div=0.
+    for i in range(len(obs)):
+        for j in range(len(sim)):
+            if i==j:
+                div+=1
+                diff+=(obs[i]-sim[j])**2
+    return diff/div
+
+diff_week_18 = [Difference(norm_obs_18,norm_d) for norm_d in norm_data_18]
+diff_month_18 = [Difference(norm_month_obs_18,norm_d) for norm_d in norm_month_data_18]
+
+
+diff_week_17 = [Difference(norm_obs_17,norm_d) for norm_d in norm_data_17]
+diff_month_17 = [Difference(norm_month_obs_17,norm_d) for norm_d in norm_month_data_17]
+
+diff_week = np.asarray(diff_week_17) + np.asarray(diff_week_18)
+diff_month = np.asarray(diff_month_17) + np.asarray(diff_month_18)
+
+total = np.asarray(total_beaching17) + np.asarray(total_beaching18)
+
+
+
+def sort_list(list1,list2):
+    zipped_pairs = zip(list2,list1)
+    
+    z = [x for _,x in sorted(zipped_pairs)]
+    return z
+
+name_week = sort_list(filen,diff_week)
+total_week = sort_list(total/800, diff_week)
+difference_week = sorted(diff_week/2)
+
+name_month = sort_list(filen,diff_month)
+total_month = sort_list(total/800, diff_month)
+difference_month = sorted(diff_month/2)
+
+
+table_week = Table([name_week, total_week, difference_week], names = ('simul','total obs','diff/week'))
+ascii.write(table_week, 'week.csv', format='csv', fast_writer=False, overwrite=True)  
+
+table_month = Table([name_month, total_month, difference_month], names = ('simul','total obs','diff/month'))
+ascii.write(table_month, 'month.csv', format='csv', fast_writer=False, overwrite=True)  
+
+
 #   fig.savefig("../outputs_observation_data/U_V_plot.png",dpi=300)
 
 #for i in range(len(beach)):
@@ -523,3 +702,50 @@ def UVplot():
     
 #for i in range(3):
  #  BoxPlot(i, date_kurnell, max_direction)
+  #  plt.figure()
+   # blueb_2017.plot(kind='bar')
+
+
+"""
+    from scipy.optimize import curve_fit
+    def f(x,a,b,c,d,e,f,g,h,i,j,k):
+          return a*x**10+b*x**9+h*x**8+i*x**7+j*x**6+k*x**5+c*x**4+d*x**3+e*x**2+f*x+g
+    weeks = np.linspace(1,52,52)
+    popt17, popc17 = curve_fit(f,weeks,blueb_2017)
+    popt18, popc18 = curve_fit(f,weeks,blueb_2018)
+    
+    x_axis=np.linspace(weeks[0],weeks[-1],100)
+    plt.figure()
+    plt.plot(x_axis,f(x_axis,*popt18),'r--',label='Fitted curve')
+    plt.bar(weeks, blueb_2018,label='Observations')
+    plt.legend()
+    plt.title('BB obs/week 2018',fontsize=12)
+    plt.figure()
+    plt.plot(x_axis,f(x_axis,*popt17),'r--',label='Fitted curve')
+    plt.bar(weeks, blueb_2017,label='Observations')
+    plt.legend()
+    plt.title('BB obs/week 2018',fontsize=12)
+    
+    
+        from scipy.optimize import curve_fit
+    def f(x,a,b,c,d,e,f,g,h,i):
+          return h*x**8+i*x**7+a*x**6+b*x**5+c*x**4+d*x**3+e*x**2+f*x+g
+    weeks = np.linspace(1,52,52)
+    popt18, popc18 = curve_fit(f,weeks,blueb_2018)
+    popt17, popc17 = curve_fit(f,weeks,blueb_2017)
+    
+    x_axis=np.linspace(weeks[0],weeks[-1],100)
+    plt.figure()
+    plt.plot(x_axis,f(x_axis,*popt18),'r--',label='Fitted curve')
+    plt.bar(weeks, blueb_2018,label='Observations')
+    plt.legend()
+    plt.title('BB obs/week 2018',fontsize=12)
+    plt.figure()
+    plt.plot(x_axis,f(x_axis,*popt17),'r--',label='Fitted curve')
+    plt.bar(weeks, blueb_2017,label='Observations')
+    plt.legend()
+    plt.title('BB obs/week 2017',fontsize=12)
+    plt.show()
+
+    
+"""
